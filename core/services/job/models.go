@@ -167,6 +167,10 @@ type FluxMonitorSpec struct {
 	AbsoluteThreshold float32       `json:"absoluteThreshold" toml:"absoluteThreshold,float" gorm:"type:float;not null"`
 	PollTimerPeriod   time.Duration `json:"pollTimerPeriod,omitempty" gorm:"type:jsonb"`
 	PollTimerDisabled bool          `json:"pollTimerDisabled,omitempty" gorm:"type:jsonb"`
+	// PollJitter is the divisor of a modulus operation used to determine the
+	// jitter period for a poll. The jitter is calculated as contractAddress % pollJitter
+	// The divisor must be less than the poll timer period in seconds
+	PollJitter        int32         `toml:"pollJitter"`
 	IdleTimerPeriod   time.Duration `json:"idleTimerPeriod,omitempty" gorm:"type:jsonb"`
 	IdleTimerDisabled bool          `json:"idleTimerDisabled,omitempty" gorm:"type:jsonb"`
 	MinPayment        *assets.Link  `json:"minPayment,omitempty"`

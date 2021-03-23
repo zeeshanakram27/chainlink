@@ -498,6 +498,7 @@ declare module 'core/store/models' {
       idleTimerPeriod: string
       pollTimerDisabled: false
       pollTimerPeriod: string
+      pollJitter: number
       minPayment: number | null
       createdAt: time.Time
     }

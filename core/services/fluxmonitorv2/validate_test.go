@@ -123,6 +123,36 @@ ds1 -> ds1_parse;
 				c.Set("DEFAULT_HTTP_TIMEOUT", "2s")
 			},
 		},
+		{
+			name: "invalid poll jitter",
+			toml: `
+type              = "fluxmonitor"
+schemaVersion       = 1
+name                = "example flux monitor spec"
+contractAddress   = "0x3cCad4715152693fE3BC4460591e3D3Fbd071b42"
+maxTaskDuration = "1s"
+precision = 2
+threshold = 0.5
+absoluteThreshold = 0.0 
+
+idleTimerPeriod = "1s"
+idleTimerDisabled = false
+
+pollTimerPeriod = "900ms"
+pollTimerDisabled = false
+pollJitter = 1
+
+observationSource = """
+ds1 [type=http method=GET url="https://pricesource1.com" requestData="{\\"coin\\": \\"ETH\\", \\"market\\": \\"USD\\"}" timeout="500ms"];
+ds1_parse [type=jsonparse path="latest"];
+ds1 -> ds1_parse;
+"""
+`,
+			assertion: func(t *testing.T, s job.Job, err error) {
+				require.Error(t, err)
+				assert.EqualError(t, err, "PollJitter must be less than or equal to PollTimerPeriod in seconds")
+			},
+		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {

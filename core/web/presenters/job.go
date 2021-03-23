@@ -57,6 +57,7 @@ type FluxMonitorSpec struct {
 	AbsoluteThreshold float32             `json:"absoluteThreshold"`
 	PollTimerPeriod   string              `json:"pollTimerPeriod"`
 	PollTimerDisabled bool                `json:"pollTimerDisabled"`
+	PollJitter        int32               `json:"pollJitter"`
 	IdleTimerPeriod   string              `json:"idleTimerPeriod"`
 	IdleTimerDisabled bool                `json:"idleTimerDisabled"`
 	MinPayment        *assets.Link        `json:"minPayment"`
@@ -74,6 +75,7 @@ func NewFluxMonitorSpec(spec *job.FluxMonitorSpec) *FluxMonitorSpec {
 		AbsoluteThreshold: spec.AbsoluteThreshold,
 		PollTimerPeriod:   spec.PollTimerPeriod.String(),
 		PollTimerDisabled: spec.PollTimerDisabled,
+		PollJitter:        spec.PollJitter,
 		IdleTimerPeriod:   spec.IdleTimerPeriod.String(),
 		IdleTimerDisabled: spec.IdleTimerDisabled,
 		MinPayment:        spec.MinPayment,

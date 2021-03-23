@@ -11,40 +11,40 @@ import (
 )
 
 func ValidatedFluxMonitorSpec(config *coreorm.Config, ts string) (job.Job, error) {
-	var jb = job.Job{
+	var j = job.Job{
 		Pipeline: *pipeline.NewTaskDAG(),
 	}
 	var spec job.FluxMonitorSpec
 	tree, err := toml.Load(ts)
 	if err != nil {
-		return jb, err
+		return j, err
 	}
-	err = tree.Unmarshal(&jb)
+	err = tree.Unmarshal(&j)
 	if err != nil {
-		return jb, err
+		return j, err
 	}
 	err = tree.Unmarshal(&spec)
 	if err != nil {
-		return jb, err
+		return j, err
 	}
-	jb.FluxMonitorSpec = &spec
+	j.FluxMonitorSpec = &spec
 
-	if jb.Type != job.FluxMonitor {
-		return jb, errors.Errorf("unsupported type %s", jb.Type)
+	if j.Type != job.FluxMonitor {
+		return j, errors.Errorf("unsupported type %s", j.Type)
 	}
-	if jb.SchemaVersion != uint32(1) {
-		return jb, errors.Errorf("the only supported schema version is currently 1, got %v", jb.SchemaVersion)
+	if j.SchemaVersion != uint32(1) {
+		return j, errors.Errorf("the only supported schema version is currently 1, got %v", j.SchemaVersion)
 	}
 
 	// Find the smallest of all the timeouts
 	// and ensure the polling period is greater than that.
-	minTaskTimeout, aTimeoutSet, err := jb.Pipeline.MinTimeout()
+	minTaskTimeout, aTimeoutSet, err := j.Pipeline.MinTimeout()
 	if err != nil {
-		return jb, err
+		return j, err
 	}
 	timeouts := []time.Duration{
 		config.DefaultHTTPTimeout().Duration(),
-		time.Duration(jb.MaxTaskDuration),
+		time.Duration(j.MaxTaskDuration),
 	}
 	if aTimeoutSet {
 		timeouts = append(timeouts, minTaskTimeout)
@@ -57,10 +57,24 @@ func ValidatedFluxMonitorSpec(config *coreorm.Config, ts string) (job.Job, error
 	}
 
 	if !validatePollTimer(spec.PollTimerDisabled, minTimeout, spec.PollTimerPeriod) {
-		return jb, errors.Errorf("pollTimer.period must be equal or greater than %v, got %v", minTimeout, spec.PollTimerPeriod)
+		return j, errors.Errorf("pollTimer.period must be equal or greater than %v, got %v", minTimeout, spec.PollTimerPeriod)
 	}
 
-	return jb, nil
+	if !validateJitter(spec.PollJitter, spec.PollTimerPeriod) {
+		return j, errors.Errorf("PollJitter must be less than or equal to PollTimerPeriod in seconds")
+	}
+
+	return j, nil
+}
+
+// validateJitter validates the jitter divisor is not greater than the polling
+// interval in seconds
+func validateJitter(pollJitter int32, pollTimerPeriod time.Duration) bool {
+	if pollJitter > int32(pollTimerPeriod.Seconds()) {
+		return false
+	}
+
+	return true
 }
 
 // validatePollTime validates the period is greater than the min timeout for an

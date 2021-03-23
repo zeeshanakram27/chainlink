@@ -154,6 +154,7 @@ function generateFluxMonitorDefinition(
     idleTimerDisabled,
     pollTimerPeriod,
     pollTimerDisabled,
+    pollJitter,
     minPayment,
   } = fluxMonitorSpec
 
@@ -170,6 +171,7 @@ function generateFluxMonitorDefinition(
       idleTimerDisabled,
       pollTimerPeriod,
       pollTimerDisabled,
+      pollJitter: pollJitter === 0 ? undefined : pollJitter, // Do not render if 0
       maxTaskDuration,
       minPayment,
       observationSource: pipelineSpec.dotDagSource,
