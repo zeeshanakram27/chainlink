@@ -86,6 +86,30 @@ func TestPollManager_PollTicker(t *testing.T) {
 	assert.False(t, ticks.roundTicked)
 }
 
+func TestPollManager_PollTickerWithJitter(t *testing.T) {
+	t.Parallel()
+
+	pm := fluxmonitorv2.NewPollManager(fluxmonitorv2.PollManagerConfig{
+		PollTickerInterval:    3 * time.Second,
+		PollTickerDisabled:    false,
+		PollDelayPeriod:       2,
+		IdleTimerPeriod:       idleTickerDefaultDuration,
+		IdleTimerDisabled:     true,
+		HibernationPollPeriod: 24 * time.Hour,
+	}, logger.Default)
+	t.Cleanup(pm.Stop)
+
+	pm.Start(false, flux_aggregator_wrapper.OracleRoundState{})
+
+	// No ticks for the first 2 seconds because of the jitter
+	ticks := watchTicks(t, pm, 2*time.Second)
+	assert.False(t, ticks.pollTicked)
+
+	// Encounters the first tick
+	ticks = watchTicks(t, pm, 4*time.Second)
+	assert.True(t, ticks.pollTicked)
+}
+
 func TestPollManager_IdleTimer(t *testing.T) {
 	t.Parallel()
 

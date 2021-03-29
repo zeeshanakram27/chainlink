@@ -782,7 +782,7 @@ ds1 -> ds1_parse
 	assert.Contains(t, jse[0].Description, "Answer is outside acceptable range")
 }
 
-func TestFluxMonitorAntiSpamLogic(t *testing.T) {
+func TestFluxMonitor_AntiSpamLogic(t *testing.T) {
 	// - deploy a brand new FM contract
 	fa := setupFluxAggregatorUniverse(t)
 
@@ -965,4 +965,91 @@ func submitMaliciousAnswer(t *testing.T, p answerParams) {
 	require.Error(t, err)
 
 	p.fa.backend.Commit()
+}
+
+func TestFluxMonitor_PollJitter(t *testing.T) {
+	fa := setupFluxAggregatorUniverse(t)
+
+	// - add oracles
+	oracleList := []common.Address{fa.nallory.From}
+	_, err := fa.aggregatorContract.ChangeOracles(fa.sergey, emptyList, oracleList, oracleList, 1, 1, 0)
+	assert.NoError(t, err, "failed to add oracles to aggregator")
+	fa.backend.Commit()
+	checkOraclesAdded(t, fa, oracleList)
+
+	// Set up chainlink app
+	app := setupApplication(t, fa, func(cfg *orm.Config) {
+		cfg.Set("DEFAULT_HTTP_TIMEOUT", "100ms")
+		cfg.Set("TRIGGER_FALLBACK_DB_POLL_INTERVAL", "1s")
+	})
+	require.NoError(t, app.StartAndConnect())
+
+	// Create mock server
+	reportPrice := int64(100)
+	mockServer := cltest.NewHTTPMockServerWithAlterableResponse(t,
+		generatePriceResponseFn(&reportPrice),
+	)
+	t.Cleanup(mockServer.Close)
+
+	// When event appears on submissionReceived, flux monitor job run is complete
+	submissionReceived := fa.WatchSubmissionReceived(t,
+		[]common.Address{fa.nallory.From},
+	)
+
+	// Create the job
+	s := `
+type              = "fluxmonitor"
+schemaVersion     = 1
+name              = "example flux monitor spec"
+contractAddress   = "%s"
+precision = 0
+threshold = 2.0
+absoluteThreshold = 0.0
+
+idleTimerPeriod = "1s"
+idleTimerDisabled = false
+
+pollTimerPeriod = "%s"
+pollTimerDisabled = false
+pollJitter = 2
+
+observationSource = """
+ds1 [type=http method=GET url="%s"];
+ds1_parse [type=jsonparse path="data,result"];
+
+ds1 -> ds1_parse
+"""
+	`
+
+	s = fmt.Sprintf(s, fa.aggregatorContractAddress, "3000ms", mockServer.URL)
+
+	requestBody, err := json.Marshal(models.CreateJobSpecRequest{
+		TOML: string(s),
+	})
+	assert.NoError(t, err)
+
+	cltest.CreateJobViaWeb2(t, app, string(requestBody))
+
+	// initialBalance := currentBalance(t, &fa).Int64()
+
+	// Initial Poll
+	assertNoSubmission(t, submissionReceived, 3*time.Second, "Must not poll during the delay")
+
+	// receiptBlock, answer := awaitSubmission(t, submissionReceived)
+
+	// assert.Equal(t, atomic.LoadInt64(&reportPrice), answer,
+	// 	"failed to report correct price to contract")
+	// checkSubmission(t,
+	// 	answerParams{
+	// 		fa:              &fa,
+	// 		roundId:         1,
+	// 		answer:          int64(100),
+	// 		from:            fa.nallory,
+	// 		isNewRound:      true,
+	// 		completesAnswer: true,
+	// 	},
+	// 	initialBalance,
+	// 	receiptBlock,
+	// )
+	// assertPipelineRunCreated(t, app.Store.DB, 1, float64(100))
 }

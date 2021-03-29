@@ -197,6 +197,7 @@ func NewFromJobSpec(
 		PollManagerConfig{
 			PollTickerInterval:    fmSpec.PollTimerPeriod,
 			PollTickerDisabled:    fmSpec.PollTimerDisabled,
+			PollDelayPeriod:       pollDelayPeriod(fmSpec.ContractAddress, int32(fmSpec.PollJitter)),
 			IdleTimerPeriod:       fmSpec.IdleTimerPeriod,
 			IdleTimerDisabled:     fmSpec.IdleTimerDisabled,
 			HibernationPollPeriod: 24 * time.Hour, // Not currently configurable
@@ -911,4 +912,19 @@ func (fm *FluxMonitor) statsAndStatusForRound(roundID uint32) (
 	}
 
 	return roundStats, run.Status(), nil
+}
+
+// pollDelayPeriod calculates the amount to delay polling in seconds
+func pollDelayPeriod(contractAddress models.EIP55Address, jitter int32) time.Duration {
+	if jitter == 0 {
+		return 0 * time.Second
+	}
+
+	fmt.Println("---> contract Address: ", contractAddress.Big())
+
+	ds := new(big.Int).Mod(contractAddress.Big(), big.NewInt(int64(jitter)))
+
+	fmt.Println("---> ds: ", ds)
+
+	return time.Duration(ds.Int64()) * time.Second
 }

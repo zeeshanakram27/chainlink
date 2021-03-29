@@ -9,9 +9,12 @@ import (
 )
 
 type PollManagerConfig struct {
-	IsHibernating         bool
-	PollTickerInterval    time.Duration
-	PollTickerDisabled    bool
+	IsHibernating      bool
+	PollTickerInterval time.Duration
+	PollTickerDisabled bool
+	// PollDelayPeriod defines the amount of time to delay polling to introduce
+	// variance in poll times between different Flux Monitors
+	PollDelayPeriod       time.Duration
 	IdleTimerPeriod       time.Duration
 	IdleTimerDisabled     bool
 	HibernationPollPeriod time.Duration
@@ -159,7 +162,9 @@ func (pm *PollManager) startPollTicker() {
 		return
 	}
 
-	pm.pollTicker.Resume()
+	time.AfterFunc(pm.cfg.PollDelayPeriod, func() {
+		pm.pollTicker.Resume()
+	})
 }
 
 // startIdleTimer starts the idle timer if it is enabled
