@@ -216,7 +216,7 @@ observationSource   = """
 		_ = cltest.CreateJobRunViaExternalInitiatorV2(t, app, jobUUID, *eia, cltest.MustJSONMarshal(t, eiRequest))
 
 		pipelineORM := pipeline.NewORM(app.Store.DB)
-		jobORM := job.NewORM(app.Store.ORM.DB, app.Store.Config, pipelineORM, &postgres.NullEventBroadcaster{}, &postgres.NullAdvisoryLocker{})
+		jobORM := job.NewORM(app.Store.ORM.DB, app.Store.Config, pipelineORM, &postgres.NullEventBroadcaster{}, &postgres.NullAdvisoryLocker{}, app.KeyStore)
 
 		runs := cltest.WaitForPipelineComplete(t, 0, jobID, 1, 2, jobORM, 5*time.Second, 300*time.Millisecond)
 		require.Len(t, runs, 1)
@@ -439,16 +439,16 @@ func setupOCRContracts(t *testing.T) (*bind.TransactOpts, *backends.SimulatedBac
 	return owner, b, ocrContractAddress, ocrContract
 }
 
-func setupNode(t *testing.T, owner *bind.TransactOpts, port int, dbName string, b *backends.SimulatedBackend) (*cltest.TestApplication, string, common.Address, ocrkey.EncryptedKeyBundle, func()) {
+func setupNode(t *testing.T, owner *bind.TransactOpts, port int, dbName string, b *backends.SimulatedBackend) (*cltest.TestApplication, string, common.Address, ocrkey.KeyV2, func()) {
 	config, _, ormCleanup := heavyweight.FullTestORM(t, fmt.Sprintf("%s%d", dbName, port), true)
 	config.Dialect = dialects.PostgresWithoutLock
 	app, appCleanup := cltest.NewApplicationWithConfigAndKeyOnSimulatedBlockchain(t, config, b)
-	_, _, err := app.GetKeyStore().OCR().GenerateEncryptedP2PKey()
+	_, err := app.GetKeyStore().OCR().GenerateP2PKey()
 	require.NoError(t, err)
-	p2pIDs := app.GetKeyStore().OCR().DecryptedP2PKeys()
+	p2pIDs, err := app.GetKeyStore().OCR().GetP2PKeys()
 	require.NoError(t, err)
 	require.Len(t, p2pIDs, 1)
-	peerID := p2pIDs[0].MustGetPeerID().Raw()
+	peerID := p2pIDs[0].PeerID().Raw()
 
 	app.Config.Set("P2P_PEER_ID", peerID)
 	app.Config.Set("P2P_LISTEN_PORT", port)
@@ -471,9 +471,9 @@ func setupNode(t *testing.T, owner *bind.TransactOpts, port int, dbName string, 
 	require.NoError(t, err)
 	b.Commit()
 
-	_, kb, err := app.GetKeyStore().OCR().GenerateEncryptedOCRKeyBundle()
+	key, err := app.GetKeyStore().OCR().GenerateOCRKey()
 	require.NoError(t, err)
-	return app, peerID, transmitter, kb, func() {
+	return app, peerID, transmitter, key, func() {
 		ormCleanup()
 		appCleanup()
 	}
@@ -492,11 +492,11 @@ func TestIntegration_OCR(t *testing.T) {
 	var (
 		oracles      []confighelper.OracleIdentityExtra
 		transmitters []common.Address
-		kbs          []ocrkey.EncryptedKeyBundle
+		keys         []ocrkey.KeyV2
 		apps         []*cltest.TestApplication
 	)
 	for i := 0; i < 4; i++ {
-		app, peerID, transmitter, kb, cleanup := setupNode(t, owner, 20000+i, fmt.Sprintf("oracle%d", i), b)
+		app, peerID, transmitter, key, cleanup := setupNode(t, owner, 20000+i, fmt.Sprintf("oracle%d", i), b)
 		defer cleanup()
 		// We want to quickly poll for the bootstrap node to come up, but if we poll too quickly
 		// we'll flood it with messages and slow things down. 5s is about how long it takes the
@@ -505,18 +505,18 @@ func TestIntegration_OCR(t *testing.T) {
 		// GracePeriod < ObservationTimeout
 		app.Config.Set("OCR_OBSERVATION_GRACE_PERIOD", "100ms")
 
-		kbs = append(kbs, kb)
+		keys = append(keys, key)
 		apps = append(apps, app)
 		transmitters = append(transmitters, transmitter)
 
 		oracles = append(oracles, confighelper.OracleIdentityExtra{
 			OracleIdentity: confighelper.OracleIdentity{
-				OnChainSigningAddress: ocrtypes.OnChainSigningAddress(kb.OnChainSigningAddress),
+				OnChainSigningAddress: ocrtypes.OnChainSigningAddress(key.OnChainSigning.Address()),
 				TransmitAddress:       transmitter,
-				OffchainPublicKey:     ocrtypes.OffchainPublicKey(kb.OffChainPublicKey),
+				OffchainPublicKey:     ocrtypes.OffchainPublicKey(key.PublicKeyOffChain()),
 				PeerID:                peerID,
 			},
-			SharedSecretEncryptionPublicKey: ocrtypes.SharedSecretEncryptionPublicKey(kb.ConfigPublicKey),
+			SharedSecretEncryptionPublicKey: ocrtypes.SharedSecretEncryptionPublicKey(key.PublicKeyConfig()),
 		})
 	}
 
@@ -640,7 +640,7 @@ observationSource = """
 
 	answer1 [type=median index=0];
 """
-`, ocrContractAddress, bootstrapPeerID, kbs[i].ID, transmitters[i], fmt.Sprintf("bridge%d", i), i, slowServers[i].URL, i))
+`, ocrContractAddress, bootstrapPeerID, keys[i].ID(), transmitters[i], fmt.Sprintf("bridge%d", i), i, slowServers[i].URL, i))
 		require.NoError(t, err)
 		jb, err := apps[i].AddJobV2(context.Background(), ocrJob, null.NewString("testocr", true))
 		require.NoError(t, err)
@@ -740,7 +740,7 @@ func TestIntegration_DirectRequest(t *testing.T) {
 	defer eventBroadcaster.Close()
 
 	pipelineORM := pipeline.NewORM(store.DB)
-	jobORM := job.NewORM(store.ORM.DB, store.Config, pipelineORM, eventBroadcaster, &postgres.NullAdvisoryLocker{})
+	jobORM := job.NewORM(store.ORM.DB, store.Config, pipelineORM, eventBroadcaster, &postgres.NullAdvisoryLocker{}, app.KeyStore)
 
 	directRequestSpec := string(cltest.MustReadFile(t, "../testdata/tomlspecs/direct-request-spec.toml"))
 	directRequestSpec = strings.Replace(directRequestSpec, "http://example.com", httpServer.URL, 1)

@@ -3,7 +3,6 @@ package cmd_test
 import (
 	"bytes"
 	"testing"
-	"time"
 
 	"github.com/smartcontractkit/chainlink/core/cmd"
 	"github.com/smartcontractkit/chainlink/core/internal/cltest"
@@ -17,21 +16,17 @@ func TestCSAKeyPresenter_RenderTable(t *testing.T) {
 	t.Parallel()
 
 	var (
-		id        = "1"
-		pubKey    = "somepubkey"
-		createdAt = time.Now()
-		updatedAt = time.Now().Add(time.Second)
-		buffer    = bytes.NewBufferString("")
-		r         = cmd.RendererTable{Writer: buffer}
+		id     = "1"
+		pubKey = "somepubkey"
+		buffer = bytes.NewBufferString("")
+		r      = cmd.RendererTable{Writer: buffer}
 	)
 
 	p := cmd.CSAKeyPresenter{
 		JAID: cmd.JAID{ID: id},
 		CSAKeyResource: presenters.CSAKeyResource{
-			JAID:      presenters.NewJAID(id),
-			PubKey:    pubKey,
-			CreatedAt: createdAt,
-			UpdatedAt: updatedAt,
+			JAID:   presenters.NewJAID(id),
+			PubKey: pubKey,
 		},
 	}
 
@@ -41,8 +36,6 @@ func TestCSAKeyPresenter_RenderTable(t *testing.T) {
 	output := buffer.String()
 	assert.Contains(t, output, id)
 	assert.Contains(t, output, pubKey)
-	assert.Contains(t, output, createdAt.String())
-	assert.Contains(t, output, updatedAt.String())
 
 	// Render many resources
 	buffer.Reset()
@@ -52,8 +45,6 @@ func TestCSAKeyPresenter_RenderTable(t *testing.T) {
 	output = buffer.String()
 	assert.Contains(t, output, id)
 	assert.Contains(t, output, pubKey)
-	assert.Contains(t, output, createdAt.String())
-	assert.Contains(t, output, updatedAt.String())
 }
 
 func TestClient_ListCSAKeys(t *testing.T) {
@@ -70,7 +61,7 @@ func TestClient_ListCSAKeys(t *testing.T) {
 	assert.Nil(t, client.ListCSAKeys(cltest.EmptyCLIContext()))
 	require.Equal(t, 1, len(r.Renders))
 	keys := *r.Renders[0].(*cmd.CSAKeyPresenters)
-	assert.Equal(t, key.PublicKey.String(), keys[0].PubKey)
+	assert.Equal(t, key.PublicKeyString(), keys[0].PubKey)
 }
 
 func TestClient_CreateCSAKey(t *testing.T) {

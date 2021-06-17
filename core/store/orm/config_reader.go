@@ -59,6 +59,7 @@ type ConfigReader interface {
 	BlockHistoryEstimatorBlockDelay() uint16
 	BlockHistoryEstimatorBlockHistorySize() uint16
 	BlockHistoryEstimatorTransactionPercentile() uint16
+	InsecureFastScrypt() bool
 	InsecureSkipVerify() bool
 	JSONConsole() bool
 	KeeperDefaultTransactionQueueDepth() uint32

@@ -68,45 +68,18 @@ func (cli *Client) RunNode(c *clipkg.Context) error {
 		logger.Warn("Ethereum is disabled. Chainlink will only run services that can operate without an ethereum connection")
 	}
 
-	pwd, err := passwordFromFile(c.String("password"))
-	if err != nil {
-		return cli.errorOut(fmt.Errorf("error reading password: %+v", err))
-	}
-
 	app, err := cli.AppFactory.NewApplication(cli.Config)
 	if err != nil {
 		return cli.errorOut(errors.Wrap(err, "creating application"))
 	}
 	store := app.GetStore()
 	keyStore := app.GetKeyStore()
+	err = cli.KeyStoreAuthenticator.authenticate(c, keyStore)
+	if err != nil {
+		return cli.errorOut(errors.Wrap(err, "error authenticating keystore"))
+	}
 	if e := checkFilePermissions(cli.Config.RootDir()); e != nil {
 		logger.Warn(e)
-	}
-	// TODO - RYAN - authenticating the keystore should be done in one step here! with ONE password file
-	// https://app.clubhouse.io/chainlinklabs/story/7735/combine-keystores
-	keyStorePwd, err := cli.KeyStoreAuthenticator.AuthenticateEthKey(keyStore.Eth(), pwd)
-	if err != nil {
-		return cli.errorOut(fmt.Errorf("error authenticating keystore: %+v", err))
-	}
-
-	if authErr := cli.KeyStoreAuthenticator.AuthenticateOCRKey(keyStore.OCR(), store.Config, keyStorePwd); authErr != nil {
-		return cli.errorOut(errors.Wrapf(authErr, "while authenticating with OCR password"))
-	}
-
-	if authErr := cli.KeyStoreAuthenticator.AuthenticateCSAKey(keyStore.CSA(), keyStorePwd); authErr != nil {
-		return cli.errorOut(errors.Wrapf(authErr, "while authenticating CSA keystore"))
-	}
-
-	if len(c.String("vrfpassword")) != 0 {
-		vrfpwd, fileErr := passwordFromFile(c.String("vrfpassword"))
-		if fileErr != nil {
-			return cli.errorOut(errors.Wrapf(fileErr,
-				"error reading VRF password from vrfpassword file \"%s\"",
-				c.String("vrfpassword")))
-		}
-		if authErr := cli.KeyStoreAuthenticator.AuthenticateVRFKey(keyStore.VRF(), vrfpwd); authErr != nil {
-			return cli.errorOut(errors.Wrapf(authErr, "while authenticating with VRF password"))
-		}
 	}
 
 	var user models.User
@@ -131,7 +104,7 @@ func (cli *Client) RunNode(c *clipkg.Context) error {
 	}
 
 	if !store.Config.EthereumDisabled() {
-		key, currentBalance, err := setupFundingKey(context.TODO(), app.GetEthClient(), keyStore.Eth(), keyStorePwd)
+		key, currentBalance, err := setupFundingKey(context.TODO(), app.GetEthClient(), keyStore.Eth())
 		if err != nil {
 			return cli.errorOut(errors.Wrap(err, "failed to generate a funding address"))
 		}
@@ -237,9 +210,8 @@ func logConfigVariables(store *strpkg.Store) error {
 
 func setupFundingKey(ctx context.Context,
 	etClient eth.Client,
-	ethKeyStore *keystore.Eth,
-	pwd string,
-) (key ethkey.Key, balance *big.Int, err error) {
+	ethKeyStore keystore.Eth,
+) (key ethkey.KeyV2, balance *big.Int, err error) {
 	key, existed, err := ethKeyStore.EnsureFundingKey()
 	if err != nil {
 		return key, nil, err
@@ -279,6 +251,10 @@ func (cli *Client) RebroadcastTransactions(c *clipkg.Context) (err error) {
 			err = multierr.Append(err, serr)
 		}
 	}()
+	pwd, err := passwordFromFile(c.String("password"))
+	if err != nil {
+		return cli.errorOut(fmt.Errorf("error reading password: %+v", err))
+	}
 	store := app.GetStore()
 	keyStore := app.GetKeyStore()
 
@@ -288,13 +264,9 @@ func (cli *Client) RebroadcastTransactions(c *clipkg.Context) (err error) {
 		return err
 	}
 
-	pwd, err := passwordFromFile(c.String("password"))
+	err = keyStore.Unlock(pwd)
 	if err != nil {
-		return cli.errorOut(fmt.Errorf("error reading password: %+v", err))
-	}
-	_, err = cli.KeyStoreAuthenticator.AuthenticateEthKey(keyStore.Eth(), pwd)
-	if err != nil {
-		return cli.errorOut(fmt.Errorf("error authenticating keystore: %+v", err))
+		return cli.errorOut(errors.Wrap(err, "error authenticating keystore"))
 	}
 
 	err = store.Start()
@@ -579,7 +551,7 @@ func (cli *Client) SetNextNonce(c *clipkg.Context) error {
 		return cli.errorOut(errors.Wrap(err, "could not decode address"))
 	}
 
-	res := db.Exec(`UPDATE keys SET next_nonce = ? WHERE address = ?`, nextNonce, address)
+	res := db.Exec(`UPDATE eth_key_states SET next_nonce = ? WHERE address = ?`, nextNonce, address)
 	if res.Error != nil {
 		return cli.errorOut(err)
 	}
@@ -592,19 +564,19 @@ func (cli *Client) SetNextNonce(c *clipkg.Context) error {
 // ImportKey imports a key to be used with the chainlink node
 // NOTE: This should not be run concurrently with a running chainlink node.
 // If you do run it concurrently, it will not take effect until the next reboot.
-func (cli *Client) ImportKey(c *clipkg.Context) error {
-	logger.SetLogger(cli.Config.CreateProductionLogger())
-	app, err := cli.AppFactory.NewApplication(cli.Config)
-	if err != nil {
-		return cli.errorOut(errors.Wrap(err, "creating application"))
-	}
+// func (cli *Client) ImportKey(c *clipkg.Context) error {
+// 	logger.SetLogger(cli.Config.CreateProductionLogger())
+// 	app, err := cli.AppFactory.NewApplication(cli.Config)
+// 	if err != nil {
+// 		return cli.errorOut(errors.Wrap(err, "creating application"))
+// 	}
 
-	if !c.Args().Present() {
-		return cli.errorOut(errors.New("Must pass in filepath to key"))
-	}
+// 	if !c.Args().Present() {
+// 		return cli.errorOut(errors.New("Must pass in filepath to key"))
+// 	}
 
-	srcKeyPath := c.Args().First() // e.g. ./keys/mykey
+// 	srcKeyPath := c.Args().First() // e.g. ./keys/mykey
 
-	_, err = app.GetKeyStore().Eth().ImportKeyFileToDB(srcKeyPath)
-	return cli.errorOut(err)
-}
+// 	_, err = app.GetKeyStore().Eth().ImportKeyFileToDB(srcKeyPath)
+// 	return cli.errorOut(err)
+// }

@@ -479,19 +479,20 @@ func NewApp(client *Client) *cli.App {
 							Name: "list", Usage: "List the VRF keys",
 							Action: client.ListVRFKeys,
 						},
-						{
-							Name: "xxxCreateWeakKeyPeriodYesIReallyKnowWhatIAmDoingAndDoNotCareAboutThisKeyMaterialFallingIntoTheWrongHandsExclamationPointExclamationPointExclamationPointExclamationPointIAmAMasochistExclamationPointExclamationPointExclamationPointExclamationPointExclamationPoint",
-							Usage: format(`
-                               For testing purposes ONLY! DO NOT USE FOR ANY OTHER PURPOSE!
+						// TODO - RYAN
+						// {
+						// 	Name: "xxxCreateWeakKeyPeriodYesIReallyKnowWhatIAmDoingAndDoNotCareAboutThisKeyMaterialFallingIntoTheWrongHandsExclamationPointExclamationPointExclamationPointExclamationPointIAmAMasochistExclamationPointExclamationPointExclamationPointExclamationPointExclamationPoint",
+						// 	Usage: format(`
+						//                    For testing purposes ONLY! DO NOT USE FOR ANY OTHER PURPOSE!
 
-                               Creates a key with weak key-derivation-function parameters, so that it can be
-                               decrypted quickly during tests. As a result, it would be cheap to brute-force
-                               the encryption password for the key, if the ciphertext fell into the wrong
-                               hands!`),
-							Flags:  append(flags("password, p"), flags("file, f")...),
-							Action: client.CreateAndExportWeakVRFKey,
-							Hidden: !client.Config.Dev(), // For when this suite gets promoted out of dev mode
-						},
+						//                    Creates a key with weak key-derivation-function parameters, so that it can be
+						//                    decrypted quickly during tests. As a result, it would be cheap to brute-force
+						//                    the encryption password for the key, if the ciphertext fell into the wrong
+						//                    hands!`),
+						// 	Flags:  append(flags("password, p"), flags("file, f")...),
+						// 	Action: client.CreateAndExportWeakVRFKey,
+						// 	Hidden: !client.Config.Dev(), // For when this suite gets promoted out of dev mode
+						// },
 					},
 				},
 			},
@@ -508,12 +509,12 @@ func NewApp(client *Client) *cli.App {
 					Description: "Does not work remotely over API.",
 					Action:      client.DeleteUser,
 				},
-				{
-					Name:    "import",
-					Aliases: []string{"i"},
-					Usage:   "Import a key file to use with the node",
-					Action:  client.ImportKey,
-				},
+				// {
+				// 	Name:    "import",
+				// 	Aliases: []string{"i"},
+				// 	Usage:   "Import a key file to use with the node",
+				// 	Action:  client.ImportKey,
+				// },
 				{
 					Name:   "setnextnonce",
 					Usage:  "Manually set the next nonce for a key. This should NEVER be necessary during normal operation. USE WITH CAUTION: Setting this incorrectly can break your node.",

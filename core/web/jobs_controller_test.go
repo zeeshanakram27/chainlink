@@ -66,11 +66,14 @@ func TestJobsController_Create_ValidationFailure_OffchainReportingSpec(t *testin
 
 			var address ethkey.EIP55Address
 			if tc.taExists {
-				key := cltest.MustInsertRandomKey(t, ta.Store.DB)
+				key, _ := cltest.MustInsertRandomKey(t, ta.Store.DB, ta.KeyStore.Eth())
 				address = key.Address
 			} else {
 				address = cltest.NewEIP55Address()
 			}
+
+			ta.KeyStore.OCR().AddP2PKey(cltest.DefaultP2PKey)
+			ta.KeyStore.OCR().AddOCRKey(cltest.DefaultOCRKey)
 
 			sp := cltest.MinimalOCRNonBootstrapSpec(contractAddress, address, tc.pid, tc.kb)
 			body, _ := json.Marshal(web.CreateJobRequest{
@@ -88,7 +91,9 @@ func TestJobsController_Create_ValidationFailure_OffchainReportingSpec(t *testin
 
 func TestJobController_Create_HappyPath(t *testing.T) {
 	app, client := setupJobsControllerTests(t)
-	pks, err := app.KeyStore.VRF().ListKeys()
+	app.KeyStore.OCR().AddOCRKey(cltest.DefaultOCRKey)
+	app.KeyStore.OCR().AddP2PKey(cltest.DefaultP2PKey)
+	pks, err := app.KeyStore.VRF().GetAll()
 	require.NoError(t, err)
 	require.Len(t, pks, 1)
 	var tt = []struct {
@@ -204,7 +209,7 @@ func TestJobController_Create_HappyPath(t *testing.T) {
 		},
 		{
 			name: "vrf",
-			toml: testspecs.GenerateVRFSpec(testspecs.VRFSpecParams{PublicKey: pks[0].String()}).Toml(),
+			toml: testspecs.GenerateVRFSpec(testspecs.VRFSpecParams{PublicKey: pks[0].PublicKey.String()}).Toml(),
 			assertion: func(t *testing.T, r *http.Response) {
 				require.Equal(t, http.StatusOK, r.StatusCode)
 				jb := job.Job{}
@@ -369,7 +374,6 @@ func setupJobsControllerTests(t *testing.T) (*cltest.TestApplication, cltest.HTT
 	require.NoError(t, app.Store.DB.Create(bridge2).Error)
 	client := app.NewHTTPClient()
 	vrfKeyStore := app.GetKeyStore().VRF()
-	vrfKeyStore.Unlock(cltest.Password)
 	_, err := vrfKeyStore.CreateKey()
 	require.NoError(t, err)
 	return app, client
@@ -381,6 +385,8 @@ func setupJobSpecsControllerTestsWithJobs(t *testing.T) (*cltest.TestApplication
 	app, cleanup := cltest.NewApplicationWithKey(t)
 	t.Cleanup(cleanup)
 	require.NoError(t, app.Start())
+	app.KeyStore.OCR().AddOCRKey(cltest.DefaultOCRKey)
+	app.KeyStore.OCR().AddP2PKey(cltest.DefaultP2PKey)
 
 	_, bridge := cltest.NewBridgeType(t, "voter_turnout", "http://blah.com")
 	require.NoError(t, app.Store.DB.Create(bridge).Error)

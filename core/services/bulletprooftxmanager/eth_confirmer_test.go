@@ -77,17 +77,16 @@ func mustInsertConfirmedEthTx(t *testing.T, db *gorm.DB, nonce int64, fromAddres
 func TestEthConfirmer_SetBroadcastBeforeBlockNum(t *testing.T) {
 	t.Parallel()
 	db := pgtest.NewGormDB(t)
-
 	ethKeyStore := cltest.NewKeyStore(t, db).Eth()
 
 	ethClient := cltest.NewEthClientMock(t)
 
-	key, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
+	key, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	config, cleanup := cltest.NewConfig(t)
 	defer cleanup()
 
-	ec := cltest.NewEthConfirmer(t, db, ethClient, config, ethKeyStore, []ethkey.Key{key})
+	ec := cltest.NewEthConfirmer(t, db, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 	etx := cltest.MustInsertUnconfirmedEthTxWithBroadcastAttempt(t, db, 0, fromAddress)
 
@@ -138,7 +137,7 @@ func TestEthConfirmer_CheckForReceipts(t *testing.T) {
 	config, cleanup := cltest.NewConfig(t)
 	defer cleanup()
 
-	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 	nonce := int64(0)
 	ctx := context.Background()
@@ -501,9 +500,9 @@ func TestEthConfirmer_CheckForReceipts_batching(t *testing.T) {
 	store, cleanup := cltest.NewStore(t)
 	defer cleanup()
 	db := store.DB
-	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
+	ethKeyStore := cltest.NewKeyStore(t, db).Eth()
 
-	key, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
+	key, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	ethClient := cltest.NewEthClientMock(t)
 
@@ -511,7 +510,7 @@ func TestEthConfirmer_CheckForReceipts_batching(t *testing.T) {
 	defer cleanup()
 	config.Set("ETH_RPC_DEFAULT_BATCH_SIZE", 2)
 
-	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 	ctx := context.Background()
 
@@ -563,9 +562,9 @@ func TestEthConfirmer_CheckForReceipts_only_likely_confirmed(t *testing.T) {
 	store, cleanup := cltest.NewStore(t)
 	defer cleanup()
 	db := store.DB
-	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
+	ethKeyStore := cltest.NewKeyStore(t, db).Eth()
 
-	key, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
+	key, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	ethClient := cltest.NewEthClientMock(t)
 
@@ -573,7 +572,7 @@ func TestEthConfirmer_CheckForReceipts_only_likely_confirmed(t *testing.T) {
 	defer cleanup()
 	config.Set("ETH_RPC_DEFAULT_BATCH_SIZE", 6)
 
-	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 	ctx := context.Background()
 
@@ -626,14 +625,14 @@ func TestEthConfirmer_CheckForReceipts_should_not_check_for_likely_unconfirmed(t
 
 	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
 
-	key, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
+	key, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	ethClient := cltest.NewEthClientMock(t)
 
 	config, cleanup := cltest.NewConfig(t)
 	defer cleanup()
 
-	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 	ctx := context.Background()
 
@@ -658,9 +657,9 @@ func TestEthConfirmer_CheckForReceipts_confirmed_missing_receipt(t *testing.T) {
 	store, cleanup := cltest.NewStore(t)
 	defer cleanup()
 	db := store.DB
-	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
+	ethKeyStore := cltest.NewKeyStore(t, db).Eth()
 
-	key, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
+	key, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	ethClient := cltest.NewEthClientMock(t)
 
@@ -668,7 +667,7 @@ func TestEthConfirmer_CheckForReceipts_confirmed_missing_receipt(t *testing.T) {
 	defer cleanup()
 
 	config.Set("ETH_FINALITY_DEPTH", 50)
-	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 	ctx := context.Background()
 
@@ -919,10 +918,10 @@ func TestEthConfirmer_FindEthTxsRequiringResubmissionDueToInsufficientEth(t *tes
 	store, cleanup := cltest.NewStore(t)
 	defer cleanup()
 	db := store.DB
-	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
+	ethKeyStore := cltest.NewKeyStore(t, db).Eth()
 
-	_, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
-	_, otherAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
+	_, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
+	_, otherAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	// Insert order is mixed up to test sorting
 	etx2 := cltest.MustInsertUnconfirmedEthTxWithInsufficientEthAttempt(t, db, 1, fromAddress)
@@ -972,9 +971,9 @@ func TestEthConfirmer_FindEthTxsRequiringRebroadcast(t *testing.T) {
 	store, cleanup := cltest.NewStore(t)
 	defer cleanup()
 	db := store.DB
-	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
+	ethKeyStore := cltest.NewKeyStore(t, db).Eth()
 
-	_, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
+	_, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	currentHead := int64(30)
 	gasBumpThreshold := int64(10)
@@ -986,7 +985,7 @@ func TestEthConfirmer_FindEthTxsRequiringRebroadcast(t *testing.T) {
 	mustInsertConfirmedEthTx(t, db, nonce, fromAddress)
 	nonce++
 
-	_, otherAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
+	_, otherAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	t.Run("returns nothing when there are no transactions", func(t *testing.T) {
 		etxs, err := bulletprooftxmanager.FindEthTxsRequiringRebroadcast(store.DB, fromAddress, currentHead, gasBumpThreshold, 10, 0)
@@ -1242,17 +1241,17 @@ func TestEthConfirmer_RebroadcastWhereNecessary(t *testing.T) {
 	defer cleanup()
 	db := store.DB
 	ethClient := cltest.NewEthClientMock(t)
+	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
 
 	config, cleanup := cltest.NewConfig(t)
 	defer cleanup()
 	config.Set("ETH_MAX_GAS_PRICE_WEI", 500000000000) // 500GWei
 
-	otherKey := cltest.MustInsertRandomKey(t, store.DB)
-	key := cltest.MustInsertRandomKey(t, store.DB)
-	fromAddress := key.Address.Address()
-	keys := []ethkey.Key{key, otherKey}
+	otherKey, _ := cltest.MustInsertRandomKey(t, db, ethKeyStore)
+	key, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore)
+	keys := []ethkey.KeyV2{key, otherKey}
 
-	kst := new(ksmocks.EthKeyStoreInterface)
+	kst := new(ksmocks.Eth)
 	// Use a mock keystore for this test
 	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, kst, keys)
 	currentHead := int64(30)
@@ -1826,8 +1825,7 @@ func TestEthConfirmer_RebroadcastWhereNecessary_WhenOutOfEth(t *testing.T) {
 	ethClient := cltest.NewEthClientMock(t)
 	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
 
-	_, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
-	ethKeyStore.Unlock(cltest.Password)
+	_, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	keys, err := ethKeyStore.SendingKeys()
 	require.NoError(t, err)
@@ -1963,16 +1961,16 @@ func TestEthConfirmer_EnsureConfirmedTransactionsInLongestChain(t *testing.T) {
 	store, cleanup := cltest.NewStore(t)
 	defer cleanup()
 	db := store.DB
-	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
+	ethKeyStore := cltest.NewKeyStore(t, db).Eth()
 
-	key, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
+	key, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	ethClient := cltest.NewEthClientMock(t)
 
 	config, cleanup := cltest.NewConfig(t)
 	defer cleanup()
 
-	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+	ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 	head := models.Head{
 		Hash:   utils.NewHash(),
@@ -2146,9 +2144,8 @@ func TestEthConfirmer_ForceRebroadcast(t *testing.T) {
 	store, cleanup := cltest.NewStore(t)
 	defer cleanup()
 	db := store.DB
-	ethKeyStore := cltest.NewKeyStore(t, store.DB).Eth()
-	key, fromAddress := cltest.MustAddRandomKeyToKeystore(t, ethKeyStore, 0)
-	ethKeyStore.Unlock(cltest.Password)
+	ethKeyStore := cltest.NewKeyStore(t, db).Eth()
+	key, fromAddress := cltest.MustInsertRandomKey(t, db, ethKeyStore, 0)
 
 	config, cleanup := cltest.NewConfig(t)
 	defer cleanup()
@@ -2163,7 +2160,7 @@ func TestEthConfirmer_ForceRebroadcast(t *testing.T) {
 
 	t.Run("rebroadcasts one eth_tx if it falls within in nonce range", func(t *testing.T) {
 		ethClient := cltest.NewEthClientMock(t)
-		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 		ethClient.On("SendTransaction", mock.Anything, mock.MatchedBy(func(tx *types.Transaction) bool {
 			return tx.Nonce() == uint64(*etx1.Nonce) &&
@@ -2180,7 +2177,7 @@ func TestEthConfirmer_ForceRebroadcast(t *testing.T) {
 
 	t.Run("uses default gas limit if overrideGasLimit is 0", func(t *testing.T) {
 		ethClient := cltest.NewEthClientMock(t)
-		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 		ethClient.On("SendTransaction", mock.Anything, mock.MatchedBy(func(tx *types.Transaction) bool {
 			return tx.Nonce() == uint64(*etx1.Nonce) &&
@@ -2197,7 +2194,7 @@ func TestEthConfirmer_ForceRebroadcast(t *testing.T) {
 
 	t.Run("rebroadcasts several eth_txes in nonce range", func(t *testing.T) {
 		ethClient := cltest.NewEthClientMock(t)
-		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 		ethClient.On("SendTransaction", mock.Anything, mock.MatchedBy(func(tx *types.Transaction) bool {
 			return tx.Nonce() == uint64(*etx1.Nonce) && uint64(tx.GasPrice().Int64()) == gasPriceWei && tx.Gas() == overrideGasLimit
@@ -2213,7 +2210,7 @@ func TestEthConfirmer_ForceRebroadcast(t *testing.T) {
 
 	t.Run("broadcasts zero transactions if eth_tx doesn't exist for that nonce", func(t *testing.T) {
 		ethClient := cltest.NewEthClientMock(t)
-		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 		ethClient.On("SendTransaction", mock.Anything, mock.MatchedBy(func(tx *types.Transaction) bool {
 			return tx.Nonce() == uint64(1)
@@ -2240,7 +2237,7 @@ func TestEthConfirmer_ForceRebroadcast(t *testing.T) {
 
 	t.Run("zero transactions use default gas limit if override wasn't specified", func(t *testing.T) {
 		ethClient := cltest.NewEthClientMock(t)
-		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.Key{key})
+		ec := cltest.NewEthConfirmer(t, store.DB, ethClient, config, ethKeyStore, []ethkey.KeyV2{key})
 
 		ethClient.On("SendTransaction", mock.Anything, mock.MatchedBy(func(tx *types.Transaction) bool {
 			return tx.Nonce() == uint64(0) && uint64(tx.GasPrice().Int64()) == gasPriceWei && uint64(tx.Gas()) == config.EthGasLimitDefault()

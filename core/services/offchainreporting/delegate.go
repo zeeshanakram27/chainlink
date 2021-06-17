@@ -2,6 +2,7 @@ package offchainreporting
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"strings"
@@ -57,7 +58,7 @@ type Delegate struct {
 	txm                txManager
 	jobORM             job.ORM
 	config             DelegateConfig
-	keyStore           *keystore.OCR
+	keyStore           keystore.OCR
 	pipelineRunner     pipeline.Runner
 	ethClient          eth.Client
 	logBroadcaster     log.Broadcaster
@@ -74,7 +75,7 @@ func NewDelegate(
 	txm txManager,
 	jobORM job.ORM,
 	config DelegateConfig,
-	keyStore *keystore.OCR,
+	keyStore keystore.OCR,
 	pipelineRunner pipeline.Runner,
 	ethClient eth.Client,
 	logBroadcaster log.Broadcaster,
@@ -216,9 +217,10 @@ func (d Delegate) ServicesForSpec(jobSpec job.Job) (services []job.Service, err 
 		if err != nil {
 			return nil, err
 		}
-		ocrkey, exists := d.keyStore.DecryptedOCRKey(kb)
-		if !exists {
-			return nil, errors.Errorf("OCR key '%v' does not exist", concreteSpec.EncryptedOCRKeyBundleID)
+		keyID := hex.EncodeToString(kb[:])
+		ocrkey, err := d.keyStore.GetOCRKey(keyID)
+		if err != nil {
+			return nil, err
 		}
 		contractABI, err := abi.JSON(strings.NewReader(offchainaggregator.OffchainAggregatorABI))
 		if err != nil {

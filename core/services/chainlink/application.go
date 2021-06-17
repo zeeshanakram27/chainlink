@@ -33,7 +33,6 @@ import (
 	"github.com/smartcontractkit/chainlink/core/services/job"
 	"github.com/smartcontractkit/chainlink/core/services/keeper"
 	"github.com/smartcontractkit/chainlink/core/services/keystore"
-	"github.com/smartcontractkit/chainlink/core/services/keystore/keys/p2pkey"
 	"github.com/smartcontractkit/chainlink/core/services/log"
 	"github.com/smartcontractkit/chainlink/core/services/offchainreporting"
 	"github.com/smartcontractkit/chainlink/core/services/periodicbackup"
@@ -64,7 +63,7 @@ type Application interface {
 	GetStore() *strpkg.Store
 	GetEthClient() eth.Client
 	GetConfig() *config.Config
-	GetKeyStore() *keystore.Master
+	GetKeyStore() keystore.Master
 	GetHeadBroadcaster() httypes.HeadBroadcasterRegistry
 	WakeSessionReaper()
 	NewBox() packr.Box
@@ -109,7 +108,7 @@ type ChainlinkApplication struct {
 	ethClient                eth.Client
 	Store                    *strpkg.Store
 	Config                   *config.Config
-	KeyStore                 *keystore.Master
+	KeyStore                 keystore.Master
 	ExternalInitiatorManager webhook.ExternalInitiatorManager
 	SessionReaper            utils.SleeperTask
 	shutdownOnce             sync.Once
@@ -221,7 +220,7 @@ func NewApplication(cfg *config.Config, ethClient eth.Client, advisoryLocker pos
 	var (
 		pipelineORM    = pipeline.NewORM(store.DB)
 		pipelineRunner = pipeline.NewRunner(pipelineORM, cfg, ethClient, keyStore.Eth(), keyStore.VRF(), txManager)
-		jobORM         = job.NewORM(store.ORM.DB, cfg, pipelineORM, eventBroadcaster, advisoryLocker)
+		jobORM         = job.NewORM(store.ORM.DB, cfg, pipelineORM, eventBroadcaster, advisoryLocker, keyStore)
 	)
 
 	var (
@@ -388,22 +387,23 @@ func setupConfig(cfg *config.Config, db *gorm.DB) {
 	orm := config.NewORM(db)
 	cfg.SetRuntimeStore(orm)
 
-	if !cfg.P2PPeerIDIsSet() {
-		var keys []p2pkey.EncryptedP2PKey
-		err := db.Order("created_at asc, id asc").Find(&keys).Error
-		if err != nil {
-			logger.Warnw("Failed to load keys", "err", err)
-		} else {
-			if len(keys) > 0 {
-				peerID := keys[0].PeerID
-				logger.Debugw("P2P_PEER_ID was not set, using the first available key", "peerID", peerID.String())
-				cfg.Set("P2P_PEER_ID", peerID)
-				if len(keys) > 1 {
-					logger.Warnf("Found more than one P2P key in the database, but no P2P_PEER_ID was specified. Defaulting to first key: %s. Please consider setting P2P_PEER_ID explicitly.", peerID.String())
-				}
-			}
-		}
-	}
+	// TODO - RYAN
+	// if !cfg.P2PPeerIDIsSet() {
+	// 	var keys []p2pkey.KeyV2
+	// 	err := db.Order("created_at asc, id asc").Find(&keys).Error
+	// 	if err != nil {
+	// 		logger.Warnw("Failed to load keys", "err", err)
+	// 	} else {
+	// 		if len(keys) > 0 {
+	// 			peerID := keys[0].PeerID()
+	// 			logger.Debugw("P2P_PEER_ID was not set, using the first available key", "peerID", peerID.String())
+	// 			cfg.Set("P2P_PEER_ID", peerID)
+	// 			if len(keys) > 1 {
+	// 				logger.Warnf("Found more than one P2P key in the database, but no P2P_PEER_ID was specified. Defaulting to first key: %s. Please consider setting P2P_PEER_ID explicitly.", peerID.String())
+	// 			}
+	// 		}
+	// 	}
+	// }
 }
 
 // Start all necessary services. If successful, nil will be returned.  Also
@@ -547,7 +547,7 @@ func (app *ChainlinkApplication) GetConfig() *config.Config {
 	return app.Config
 }
 
-func (app *ChainlinkApplication) GetKeyStore() *keystore.Master {
+func (app *ChainlinkApplication) GetKeyStore() keystore.Master {
 	return app.KeyStore
 }
 
