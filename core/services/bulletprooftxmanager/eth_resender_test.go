@@ -35,16 +35,16 @@ func Test_EthResender_FindEthTxesRequiringResend(t *testing.T) {
 	})
 
 	etxs := []models.EthTx{
-		cltest.MustInsertUnconfirmedEthTxWithBroadcastAttempt(t, store, 0, fromAddress, time.Unix(1616509100, 0)),
-		cltest.MustInsertUnconfirmedEthTxWithBroadcastAttempt(t, store, 1, fromAddress, time.Unix(1616509200, 0)),
-		cltest.MustInsertUnconfirmedEthTxWithBroadcastAttempt(t, store, 2, fromAddress, time.Unix(1616509300, 0)),
+		cltest.MustInsertUnconfirmedEthTxWithBroadcastLegacyAttempt(t, store, 0, fromAddress, time.Unix(1616509100, 0)),
+		cltest.MustInsertUnconfirmedEthTxWithBroadcastLegacyAttempt(t, store, 1, fromAddress, time.Unix(1616509200, 0)),
+		cltest.MustInsertUnconfirmedEthTxWithBroadcastLegacyAttempt(t, store, 2, fromAddress, time.Unix(1616509300, 0)),
 	}
-	attempt1_2 := newBroadcastEthTxAttempt(t, etxs[0].ID)
-	attempt1_2.GasPrice = *utils.NewBig(big.NewInt(10))
+	attempt1_2 := newBroadcastLegacyEthTxAttempt(t, etxs[0].ID)
+	attempt1_2.GasPrice = utils.NewBig(big.NewInt(10))
 	require.NoError(t, store.DB.Create(&attempt1_2).Error)
 
-	attempt3_2 := newInProgressEthTxAttempt(t, etxs[2].ID)
-	attempt3_2.GasPrice = *utils.NewBig(big.NewInt(10))
+	attempt3_2 := newInProgressLegacyEthTxAttempt(t, etxs[2].ID)
+	attempt3_2.GasPrice = utils.NewBig(big.NewInt(10))
 	require.NoError(t, store.DB.Create(&attempt3_2).Error)
 
 	t.Run("returns the highest price attempt for each transaction that was last broadcast before or on the given time", func(t *testing.T) {
@@ -83,9 +83,9 @@ func Test_EthResender_Start(t *testing.T) {
 		er := bulletprooftxmanager.NewEthResender(store.DB, ethClient, 100*time.Millisecond, store.Config)
 
 		originalBroadcastAt := time.Unix(1616509100, 0)
-		etx := cltest.MustInsertUnconfirmedEthTxWithBroadcastAttempt(t, store, 0, fromAddress, originalBroadcastAt)
-		etx2 := cltest.MustInsertUnconfirmedEthTxWithBroadcastAttempt(t, store, 1, fromAddress, originalBroadcastAt)
-		cltest.MustInsertUnconfirmedEthTxWithBroadcastAttempt(t, store, 2, fromAddress, time.Now().Add(1*time.Hour))
+		etx := cltest.MustInsertUnconfirmedEthTxWithBroadcastLegacyAttempt(t, store, 0, fromAddress, originalBroadcastAt)
+		etx2 := cltest.MustInsertUnconfirmedEthTxWithBroadcastLegacyAttempt(t, store, 1, fromAddress, originalBroadcastAt)
+		cltest.MustInsertUnconfirmedEthTxWithBroadcastLegacyAttempt(t, store, 2, fromAddress, time.Now().Add(1*time.Hour))
 
 		// First batch of 1
 		ethClient.On("RoundRobinBatchCallContext", mock.Anything, mock.MatchedBy(func(b []rpc.BatchElem) bool {

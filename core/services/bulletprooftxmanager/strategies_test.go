@@ -53,7 +53,7 @@ func Test_DropOldestStrategy_PruneQueue(t *testing.T) {
 	n++
 	cltest.MustInsertConfirmedEthTxWithAttempt(t, store, n, 42, fromAddress)
 	n++
-	cltest.MustInsertUnconfirmedEthTxWithBroadcastAttempt(t, store, n, fromAddress)
+	cltest.MustInsertUnconfirmedEthTxWithBroadcastLegacyAttempt(t, store, n, fromAddress)
 	n++
 	initialEtxs := []models.EthTx{
 		cltest.MustInsertUnstartedEthTx(t, store, fromAddress, subj1),

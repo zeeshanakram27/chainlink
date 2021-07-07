@@ -1191,7 +1191,7 @@ func TestORM_RemoveUnstartedTransaction_RemoveByEthTx(t *testing.T) {
 	ethTx := cltest.NewEthTx(t, store, key.Address.Address())
 	require.NoError(t, store.DB.Create(&ethTx).Error)
 
-	ethTxAttempt := cltest.NewEthTxAttempt(t, ethTx.ID)
+	ethTxAttempt := cltest.NewLegacyEthTxAttempt(t, ethTx.ID)
 	require.NoError(t, store.DB.Create(&ethTxAttempt).Error)
 	require.NoError(t, store.DB.Exec(linkEthTxWithTaskRunQuery, unstartedJobRun.TaskRuns[0].ID, ethTx.ID).Error)
 
@@ -1270,9 +1270,9 @@ func TestORM_EthTransactionsWithAttempts(t *testing.T) {
 
 	// add 2nd attempt to tx2
 	blockNum := int64(3)
-	attempt := cltest.NewEthTxAttempt(t, tx2.ID)
+	attempt := cltest.NewLegacyEthTxAttempt(t, tx2.ID)
 	attempt.State = models.EthTxAttemptBroadcast
-	attempt.GasPrice = *utils.NewBig(big.NewInt(3))
+	attempt.GasPrice = utils.NewBig(big.NewInt(3))
 	attempt.BroadcastBeforeBlockNum = &blockNum
 	require.NoError(t, store.DB.Create(&attempt).Error)
 

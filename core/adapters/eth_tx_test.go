@@ -159,7 +159,7 @@ func TestEthTxAdapter_Perform_BPTXM(t *testing.T) {
 			DataPrefix:       dataPrefix,
 		}
 		taskRunID, jobRun := cltest.MustInsertTaskRun(t, store)
-		etx := cltest.MustInsertUnconfirmedEthTxWithBroadcastAttempt(t, store, 0, fromAddress)
+		etx := cltest.MustInsertUnconfirmedEthTxWithBroadcastLegacyAttempt(t, store, 0, fromAddress)
 		_, err := store.MustSQLDB().Exec(`INSERT INTO eth_task_run_txes (task_run_id, eth_tx_id) VALUES ($1, $2)`, taskRunID, etx.ID)
 		require.NoError(t, err)
 		input := models.NewRunInputWithResult(jobRun, taskRunID, "0x9786856756", models.RunStatusUnstarted)
@@ -294,7 +294,7 @@ func TestEthTxAdapter_Perform_BPTXM(t *testing.T) {
 		}
 		taskRunID, jobRun := cltest.MustInsertTaskRun(t, store)
 		etx := cltest.MustInsertConfirmedEthTxWithAttempt(t, store, 5, 1, fromAddress)
-		attempt2 := cltest.MustInsertBroadcastEthTxAttempt(t, etx.ID, store, 2)
+		attempt2 := cltest.MustInsertBroadcastLegacyEthTxAttempt(t, etx.ID, store, 2)
 
 		confirmedAttemptHash := attempt2.Hash
 

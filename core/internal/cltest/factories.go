@@ -535,9 +535,9 @@ func MustInsertUnconfirmedEthTx(t *testing.T, store *strpkg.Store, nonce int64, 
 	return etx
 }
 
-func MustInsertUnconfirmedEthTxWithBroadcastAttempt(t *testing.T, store *strpkg.Store, nonce int64, fromAddress common.Address, opts ...interface{}) models.EthTx {
+func MustInsertUnconfirmedEthTxWithBroadcastLegacyAttempt(t *testing.T, store *strpkg.Store, nonce int64, fromAddress common.Address, opts ...interface{}) models.EthTx {
 	etx := MustInsertUnconfirmedEthTx(t, store, nonce, fromAddress, opts...)
-	attempt := NewEthTxAttempt(t, etx.ID)
+	attempt := NewLegacyEthTxAttempt(t, etx.ID)
 
 	tx := types.NewTransaction(uint64(nonce), NewAddress(), big.NewInt(142), 242, big.NewInt(342), []byte{1, 2, 3})
 	rlp := new(bytes.Buffer)
@@ -560,7 +560,7 @@ func MustInsertUnconfirmedEthTxWithInsufficientEthAttempt(t *testing.T, store *s
 	etx.Nonce = &n
 	etx.State = models.EthTxUnconfirmed
 	require.NoError(t, store.DB.Save(&etx).Error)
-	attempt := NewEthTxAttempt(t, etx.ID)
+	attempt := NewLegacyEthTxAttempt(t, etx.ID)
 
 	tx := types.NewTransaction(uint64(nonce), NewAddress(), big.NewInt(142), 242, big.NewInt(342), []byte{1, 2, 3})
 	rlp := new(bytes.Buffer)
@@ -582,7 +582,7 @@ func MustInsertConfirmedEthTxWithAttempt(t *testing.T, store *strpkg.Store, nonc
 	etx.Nonce = &nonce
 	etx.State = models.EthTxConfirmed
 	require.NoError(t, store.DB.Save(&etx).Error)
-	attempt := NewEthTxAttempt(t, etx.ID)
+	attempt := NewLegacyEthTxAttempt(t, etx.ID)
 	attempt.BroadcastBeforeBlockNum = &broadcastBeforeBlockNum
 	attempt.State = models.EthTxAttemptBroadcast
 	require.NoError(t, store.DB.Save(&attempt).Error)
@@ -597,7 +597,7 @@ func MustInsertInProgressEthTxWithAttempt(t *testing.T, store *strpkg.Store, non
 	etx.Nonce = &nonce
 	etx.State = models.EthTxInProgress
 	require.NoError(t, store.DB.Save(&etx).Error)
-	attempt := NewEthTxAttempt(t, etx.ID)
+	attempt := NewLegacyEthTxAttempt(t, etx.ID)
 	tx := types.NewTransaction(uint64(nonce), NewAddress(), big.NewInt(142), 242, big.NewInt(342), []byte{1, 2, 3})
 	rlp := new(bytes.Buffer)
 	require.NoError(t, tx.EncodeRLP(rlp))
@@ -624,11 +624,11 @@ func MustInsertUnstartedEthTx(t *testing.T, store *strpkg.Store, fromAddress com
 	return etx
 }
 
-func NewEthTxAttempt(t *testing.T, etxID int64) models.EthTxAttempt {
+func NewLegacyEthTxAttempt(t *testing.T, etxID int64) models.EthTxAttempt {
 	gasPrice := utils.NewBig(big.NewInt(1))
 	return models.EthTxAttempt{
 		EthTxID:  etxID,
-		GasPrice: *gasPrice,
+		GasPrice: gasPrice,
 		// Just a random signed raw tx that decodes correctly
 		// Ignore all actual values
 		SignedRawTx: hexutil.MustDecode("0xf889808504a817c8008307a12094000000000000000000000000000000000000000080a400000000000000000000000000000000000000000000000000000000000000000000000025a0838fe165906e2547b9a052c099df08ec891813fea4fcdb3c555362285eb399c5a070db99322490eb8a0f2270be6eca6e3aedbc49ff57ef939cf2774f12d08aa85e"),
@@ -637,10 +637,10 @@ func NewEthTxAttempt(t *testing.T, etxID int64) models.EthTxAttempt {
 	}
 }
 
-func MustInsertBroadcastEthTxAttempt(t *testing.T, etxID int64, store *strpkg.Store, gasPrice int64) models.EthTxAttempt {
-	attempt := NewEthTxAttempt(t, etxID)
+func MustInsertBroadcastLegacyEthTxAttempt(t *testing.T, etxID int64, store *strpkg.Store, gasPrice int64) models.EthTxAttempt {
+	attempt := NewLegacyEthTxAttempt(t, etxID)
 	attempt.State = models.EthTxAttemptBroadcast
-	attempt.GasPrice = *utils.NewBig(big.NewInt(gasPrice))
+	attempt.GasPrice = utils.NewBig(big.NewInt(gasPrice))
 	require.NoError(t, store.DB.Create(&attempt).Error)
 	return attempt
 }
