@@ -1,4 +1,4 @@
-package offchainreporting
+package ocrcommon
 
 import (
 	"context"
@@ -9,20 +9,29 @@ import (
 	"gorm.io/gorm"
 )
 
-type txManager interface {
-	CreateEthTransaction(db *gorm.DB, fromAddress, toAddress common.Address, payload []byte, gasLimit uint64, meta interface{}, strategy bulletprooftxmanager.TxStrategy) (etx bulletprooftxmanager.EthTx, err error)
-}
+type (
 
-type transmitter struct {
-	txm         txManager
-	db          *gorm.DB
-	fromAddress common.Address
-	gasLimit    uint64
-	strategy    bulletprooftxmanager.TxStrategy
-}
+	Transmitter interface {
+		CreateEthTransaction(ctx context.Context, toAddress common.Address, payload []byte) error
+		FromAddress() common.Address
+	}
+	
+	TxManager interface {
+		CreateEthTransaction(db *gorm.DB, fromAddress, toAddress common.Address, payload []byte, gasLimit uint64, meta interface{}, strategy bulletprooftxmanager.TxStrategy) (etx bulletprooftxmanager.EthTx, err error)
+	}
+
+	transmitter struct {
+		txm         TxManager
+		db          *gorm.DB
+		fromAddress common.Address
+		gasLimit    uint64
+		strategy    bulletprooftxmanager.TxStrategy
+	}
+
+)
 
 // NewTransmitter creates a new eth transmitter
-func NewTransmitter(txm txManager, db *gorm.DB, fromAddress common.Address, gasLimit uint64, strategy bulletprooftxmanager.TxStrategy) Transmitter {
+func NewTransmitter(txm TxManager, db *gorm.DB, fromAddress common.Address, gasLimit uint64, strategy bulletprooftxmanager.TxStrategy) Transmitter {
 	return &transmitter{
 		txm:         txm,
 		db:          db,
