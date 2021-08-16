@@ -32,7 +32,7 @@ func Test_Peerstore_Start(t *testing.T) {
 		'/ip4/127.0.0.2/tcp/12000/p2p/12D3KooWL1yndUw9T2oWXjhfjdwSscWA78YCpUdduA3Cnn4dCtph',
 		NOW(),
 		NOW(),
-	 	?
+		?
 	),
 	(
 		'12D3KooWL1yndUw9T2oWXjhfjdwSscWA78YCpUdduA3Cnn4dCtph',
@@ -88,4 +88,16 @@ func Test_Peerstore_WriteToDB(t *testing.T) {
 	require.Equal(t, "12D3KooWL1yndUw9T2oWXjhfjdwSscWA78YCpUdduA3Cnn4dCtph", peer.ID)
 	require.Equal(t, "/ip4/127.0.0.2/tcp/12000/p2p/12D3KooWL1yndUw9T2oWXjhfjdwSscWA78YCpUdduA3Cnn4dCtph", peer.Addr)
 	require.Equal(t, cltest.DefaultP2PPeerID.Raw(), peer.PeerID)
+}
+
+
+func Test_Peerstore_WriteToDB_NoPeers(t *testing.T) {
+	store, cleanup := cltest.NewStore(t)
+	defer cleanup()
+
+	wrapper, err := ocrcommon.NewPeerstoreWrapper(store.DB, 1*time.Second, p2pkey.PeerID(cltest.DefaultP2PPeerID))
+	require.NoError(t, err)
+
+	err = wrapper.WriteToDB()
+	require.NoError(t, err)
 }

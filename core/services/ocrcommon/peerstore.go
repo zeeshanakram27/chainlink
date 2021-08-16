@@ -167,6 +167,10 @@ func (p *Pstorewrapper) WriteToDB() error {
 			valueArgs = append(valueArgs, p.PeerID)
 		}
 
+		if len(peers) < 1 {
+			return nil
+		}
+
 		/* #nosec G201 */
 		stmt := fmt.Sprintf("INSERT INTO p2p_peers (id, addr, peer_id, created_at, updated_at) VALUES %s", strings.Join(valueStrings, ","))
 		return tx.Exec(stmt, valueArgs...).Error
