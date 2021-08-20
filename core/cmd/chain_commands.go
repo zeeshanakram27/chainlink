@@ -40,7 +40,7 @@ func (ps ChainPresenters) RenderTable(rt RendererTable) error {
 
 // IndexChains returns all chains.
 func (cli *Client) IndexChains(c *cli.Context) (err error) {
-	return cli.getPage("/v2/chains", c.Int("page"), &ChainPresenters{})
+	return cli.getPage("/v2/chains/evm", c.Int("page"), &ChainPresenters{})
 }
 
 // ShowChain returns the info for the given Chain name.
@@ -49,7 +49,7 @@ func (cli *Client) IndexChains(c *cli.Context) (err error) {
 // 		return cli.errorOut(errors.New("must pass the id of the chain to be shown"))
 // 	}
 // 	chainID := c.Args().First()
-// 	resp, err := cli.HTTP.Get("/v2/chains/" + chainID)
+// 	resp, err := cli.HTTP.Get("/v2/chains/evm/" + chainID)
 // 	if err != nil {
 // 		return cli.errorOut(err)
 // 	}
@@ -73,7 +73,7 @@ func (cli *Client) CreateChain(c *cli.Context) (err error) {
 		return cli.errorOut(err)
 	}
 
-	resp, err := cli.HTTP.Post("/v2/chains", buf)
+	resp, err := cli.HTTP.Post("/v2/chains/evm", buf)
 	if err != nil {
 		return cli.errorOut(err)
 	}
@@ -92,7 +92,7 @@ func (cli *Client) RemoveChain(c *cli.Context) (err error) {
 		return cli.errorOut(errors.New("must pass the id of the chain to be removed"))
 	}
 	chainID := c.Args().First()
-	resp, err := cli.HTTP.Delete("/v2/chains/" + chainID)
+	resp, err := cli.HTTP.Delete("/v2/chains/evm/" + chainID)
 	if err != nil {
 		return cli.errorOut(err)
 	}
