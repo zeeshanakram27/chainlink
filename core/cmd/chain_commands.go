@@ -44,23 +44,23 @@ func (cli *Client) IndexChains(c *cli.Context) (err error) {
 }
 
 // ShowChain returns the info for the given Chain name.
-func (cli *Client) ShowChain(c *cli.Context) (err error) {
-	if !c.Args().Present() {
-		return cli.errorOut(errors.New("must pass the id of the chain to be shown"))
-	}
-	chainID := c.Args().First()
-	resp, err := cli.HTTP.Get("/v2/chains/" + chainID)
-	if err != nil {
-		return cli.errorOut(err)
-	}
-	defer func() {
-		if cerr := resp.Body.Close(); cerr != nil {
-			err = multierr.Append(err, cerr)
-		}
-	}()
+// func (cli *Client) ShowChain(c *cli.Context) (err error) {
+// 	if !c.Args().Present() {
+// 		return cli.errorOut(errors.New("must pass the id of the chain to be shown"))
+// 	}
+// 	chainID := c.Args().First()
+// 	resp, err := cli.HTTP.Get("/v2/chains/" + chainID)
+// 	if err != nil {
+// 		return cli.errorOut(err)
+// 	}
+// 	defer func() {
+// 		if cerr := resp.Body.Close(); cerr != nil {
+// 			err = multierr.Append(err, cerr)
+// 		}
+// 	}()
 
-	return cli.renderAPIResponse(resp, &ChainPresenter{})
-}
+// 	return cli.renderAPIResponse(resp, &ChainPresenter{})
+// }
 
 // CreateChain adds a new chain to the chainlink node
 func (cli *Client) CreateChain(c *cli.Context) (err error) {

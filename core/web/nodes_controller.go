@@ -1,6 +1,11 @@
 package web
 
 import (
+	"net/http"
+	"strconv"
+
+	"github.com/smartcontractkit/chainlink/core/chains/evm"
+	"github.com/smartcontractkit/chainlink/core/chains/evm/types"
 	"github.com/smartcontractkit/chainlink/core/services/chainlink"
 	"github.com/smartcontractkit/chainlink/core/web/presenters"
 
@@ -14,27 +19,56 @@ type NodesController struct {
 func (nc *NodesController) Index(c *gin.Context, size, page, offset int) {
 	id := c.Param("ID")
 
+	var nodes []types.Node
 	var count int
 	var err error
 
 	if id == "" {
 		// fetch nodes for chain ID
+
 	} else {
 		// fetch all nodes
 	}
 
-	var resources []presenters.ChainResource
+	var resources []presenters.NodeResource
 	for _, node := range nodes {
-		resources = append(resources, *presenters.NewChainResource(node))
+		resources = append(resources, presenters.NewNodeResource(node))
 	}
 
-	paginatedResponse(c, "node", size, page, node, count, err)
+	paginatedResponse(c, "node", size, page, resources, count, err)
 }
 
 func (nc *NodesController) Create(c *gin.Context) {
+	var request evm.NewNode
 
+	if err := c.ShouldBindJSON(&request); err != nil {
+		jsonAPIError(c, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	node, err := nc.App.EVMORM().CreateNode(request)
+
+	if err != nil {
+		jsonAPIError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	jsonAPIResponse(c, presenters.NewNodeResource(node), "node")
 }
 
 func (nc *NodesController) Delete(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("ID"), 10, 64)
+	if err != nil {
+		jsonAPIError(c, http.StatusUnprocessableEntity, err)
+		return
+	}
 
+	err = nc.App.EVMORM().DeleteNode(id)
+
+	if err != nil {
+		jsonAPIError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	jsonAPIResponseWithStatus(c, nil, "chain", http.StatusNoContent)
 }

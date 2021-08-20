@@ -16,7 +16,7 @@ func (p *NodePresenter) ToRow() []string {
 	row := []string{
 		p.GetID(),
 		p.Name,
-		string(p.ChainID),
+		p.EVMChainID.ToInt().String(),
 		p.WSURL.String(),
 		p.HTTPURL.String(),
 		p.CreatedAt.String(),
@@ -47,23 +47,23 @@ func (cli *Client) IndexNodes(c *cli.Context) (err error) {
 }
 
 // ShowNode returns the info for the given Node name.
-func (cli *Client) ShowNode(c *cli.Context) (err error) {
-	if !c.Args().Present() {
-		return cli.errorOut(errors.New("must pass the id of the node to be shown"))
-	}
-	nodeID := c.Args().First()
-	resp, err := cli.HTTP.Get("/v2/nodes/" + nodeID)
-	if err != nil {
-		return cli.errorOut(err)
-	}
-	defer func() {
-		if cerr := resp.Body.Close(); cerr != nil {
-			err = multierr.Append(err, cerr)
-		}
-	}()
+// func (cli *Client) ShowNode(c *cli.Context) (err error) {
+// 	if !c.Args().Present() {
+// 		return cli.errorOut(errors.New("must pass the id of the node to be shown"))
+// 	}
+// 	nodeID := c.Args().First()
+// 	resp, err := cli.HTTP.Get("/v2/nodes/" + nodeID)
+// 	if err != nil {
+// 		return cli.errorOut(err)
+// 	}
+// 	defer func() {
+// 		if cerr := resp.Body.Close(); cerr != nil {
+// 			err = multierr.Append(err, cerr)
+// 		}
+// 	}()
 
-	return cli.renderAPIResponse(resp, &NodePresenter{})
-}
+// 	return cli.renderAPIResponse(resp, &NodePresenter{})
+// }
 
 // CreateNode adds a new node to the nodelink node
 func (cli *Client) CreateNode(c *cli.Context) (err error) {
