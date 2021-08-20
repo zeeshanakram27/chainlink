@@ -43,16 +43,19 @@ func (o *orm) Chains(offset, limit int) ([]types.Chain, int, error) {
 type NewNode struct {
 	Name       string      `json:"name"`
 	EVMChainID utils.Big   `json:"evm_chain_id"`
-	WSURL      string      `json:"ws_url"`
-	HTTPURL    null.String `json:"http_url"`
+	WSURL      null.String `json:"ws_url" db:"ws_url"`
+	HTTPURL    string      `json:"http_url" db:"http_url"`
 	SendOnly   bool        `json:"send_only"`
 }
 
 func (o *orm) CreateNode(data NewNode) (node types.Node, err error) {
 	sql := `INSERT INTO nodes (name, evm_chain_id, ws_url, http_url, send_only, created_at, updated_at)
 	VALUES (:name, :evm_chain_id, :ws_url, :http_url, :send_only, now(), now())
-	RETURNING *`
+	RETURNING *;`
 	stmt, err := o.db.PrepareNamed(sql)
+	if err != nil {
+		return node, err
+	}
 	err = stmt.Get(&node, data)
 	return node, err
 }

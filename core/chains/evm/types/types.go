@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"math/big"
-	"net/url"
 	"time"
 
 	"github.com/smartcontractkit/chainlink/core/store/models"
@@ -95,9 +94,9 @@ type Node struct {
 	ID         int64 `gorm:"primary_key"`
 	Name       string
 	EVMChain   Chain
-	EVMChainID utils.Big `gorm:"column:evm_chain_id"`
-	WSURL      url.URL   `gorm:"column:ws_url"`
-	HTTPURL    *url.URL  `gorm:"column:http_url"`
+	EVMChainID utils.Big   `gorm:"column:evm_chain_id"`
+	WSURL      null.String `gorm:"column:ws_url" db:"ws_url"`
+	HTTPURL    string      `gorm:"column:http_url" db:"http_url"`
 	SendOnly   bool
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
