@@ -36,6 +36,8 @@ func ValidateJob(j models.JobSpec, store *store.Store, keyStore *keystore.Master
 			fe.Merge(err)
 		}
 	}
+
+	// TODO: validate tasks
 	for _, task := range j.Tasks {
 		if err := validateTask(task, store, keyStore); err != nil {
 			fe.Merge(err)

@@ -25,6 +25,8 @@ var (
 	TaskTypeEthUint256 = models.MustNewTaskType("ethuint256")
 	// TaskTypeEthTx is the identifier for the EthTx adapter.
 	TaskTypeEthTx = models.MustNewTaskType("ethtx")
+	// TaskTypeSTXTx is the identifier for the EthTx adapter.
+	TaskTypeStxTx = models.MustNewTaskType("stxtx")
 	// TaskTypeHTTPGetWithUnrestrictedNetworkAccess is the identifier for the HTTPGet adapter, with local/private IP access enabled.
 	TaskTypeHTTPGetWithUnrestrictedNetworkAccess = models.MustNewTaskType("httpgetwithunrestrictednetworkaccess")
 	// TaskTypeHTTPPostWithUnrestrictedNetworkAccess is the identifier for the HTTPPost adapter, with local/private IP access enabled.
@@ -78,6 +80,7 @@ func (p PipelineAdapter) MinPayment() *assets.Link {
 }
 
 // For determines the adapter type to use for a given task.
+// TODO: might need to change/add eth.Client. Need to add `stx` directory in chainlink/core/services
 func For(task models.TaskSpec, config orm.ConfigReader, orm *orm.ORM, ethClient eth.Client) (*PipelineAdapter, error) {
 	var err error
 	mic := config.MinIncomingConfirmations()
@@ -125,6 +128,8 @@ func FindNativeAdapterFor(task models.TaskSpec, ethClient eth.Client) BaseAdapte
 		return &EthUint256{}
 	case TaskTypeEthTx:
 		return &EthTx{}
+	case TaskTypeStxTx:
+		return &StxTx{}
 	case TaskTypeHTTPGetWithUnrestrictedNetworkAccess:
 		return &HTTPGet{AllowUnrestrictedNetworkAccess: true}
 	case TaskTypeHTTPPostWithUnrestrictedNetworkAccess:

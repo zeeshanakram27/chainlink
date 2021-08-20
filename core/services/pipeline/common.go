@@ -230,6 +230,7 @@ const (
 	TaskTypeVRF             TaskType = "vrf"
 	TaskTypeETHCall         TaskType = "ethcall"
 	TaskTypeETHTx           TaskType = "ethtx"
+	TaskTypeSTXTx           TaskType = "stxtx"
 	TaskTypeETHABIEncode    TaskType = "ethabiencode"
 	TaskTypeETHABIDecode    TaskType = "ethabidecode"
 	TaskTypeETHABIDecodeLog TaskType = "ethabidecodelog"
@@ -286,6 +287,8 @@ func UnmarshalTaskFromMap(taskType TaskType, taskMap interface{}, ID int, dotID 
 		task = &ETHCallTask{BaseTask: BaseTask{id: ID, dotID: dotID}}
 	case TaskTypeETHTx:
 		task = &ETHTxTask{BaseTask: BaseTask{id: ID, dotID: dotID}}
+	case TaskTypeSTXTx:
+		task = &STXTxTask{BaseTask: BaseTask{id: ID, dotID: dotID}}
 	case TaskTypeETHABIEncode:
 		task = &ETHABIEncodeTask{BaseTask: BaseTask{id: ID, dotID: dotID}}
 	case TaskTypeETHABIDecode:

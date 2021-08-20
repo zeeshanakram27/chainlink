@@ -21,6 +21,7 @@ import (
 
 func init() {
 	dbURL := os.Getenv("DATABASE_URL")
+	dbURL = "postgresql://postgres:secret@host.docker.internal:5432/chainlink_test?sslmode=disable"
 	if dbURL == "" {
 		log.Fatal("You must provide a DATABASE_URL environment variable")
 	}
