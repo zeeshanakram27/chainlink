@@ -382,6 +382,15 @@ export const fetchAccountBalance = requestFetch(
     }>(json),
 )
 
+export const fetchStacksAccountBalance = requestFetch(
+  'STACKS_ACCOUNT_BALANCE',
+  api.v2.user.stacksBalances.getAccountBalances,
+  (json) =>
+    normalize<{
+      stacksAccountBalances: presenters.StacksAccountBalance[]
+    }>(json),
+)
+
 export type NormalizedAccountBalance = GetNormalizedData<
   typeof fetchAccountBalance
 >

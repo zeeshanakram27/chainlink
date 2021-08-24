@@ -14,8 +14,10 @@ import {
   fetchRecentJobRuns,
   fetchRecentlyCreatedJobs,
   fetchAccountBalance,
+  fetchStacksAccountBalance,
 } from 'actionCreators'
 import accountBalanceSelector from 'selectors/accountBalance'
+import stacksAccountBalanceSelector from 'selectors/stacksAccountBalance'
 import dashboardJobRunsCountSelector from 'selectors/dashboardJobRunsCount'
 import recentJobRunsSelector from 'selectors/recentJobRuns'
 import recentlyCreatedJobsSelector from 'selectors/recentlyCreatedJobs'
@@ -42,6 +44,7 @@ export const Index = ({
 }: Props) => {
   const dispatch = useDispatch()
   const accountBalance = useSelector(accountBalanceSelector)
+  const stacksAccountBalance = useSelector(stacksAccountBalanceSelector)
   const jobRunsCount = useSelector(dashboardJobRunsCountSelector)
   const recentJobRuns = useSelector(recentJobRunsSelector)
   const recentlyCreatedJobs = useSelector(recentlyCreatedJobsSelector)
@@ -52,6 +55,10 @@ export const Index = ({
 
   useEffect(() => {
     dispatch(fetchAccountBalance())
+  }, [dispatch])
+
+  useEffect(() => {
+    dispatch(fetchStacksAccountBalance())
   }, [dispatch])
 
   useEffect(() => {
@@ -102,14 +109,14 @@ export const Index = ({
           <Grid container>
             <Grid item xs={12}>
               <TokenBalanceCard
-                title="Link Balance"
+                title="STX-Link Balance"
                 value={accountBalance?.linkBalance}
               />
             </Grid>
             <Grid item xs={12}>
               <TokenBalanceCard
-                title="Ether Balance"
-                value={accountBalance?.ethBalance}
+                title="Stacks Balance"
+                value={stacksAccountBalance?.balance}
               />
             </Grid>
             <Grid item xs={12}>

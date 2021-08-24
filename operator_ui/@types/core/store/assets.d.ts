@@ -11,4 +11,17 @@ declare module 'core/store/assets' {
    */
   export type Eth = big.Int
   //#endregion currencies.go
+
+  /**
+   * STX-Link contains a field to represent the smallest units of LINK
+   */
+   export type STX_Link = big.Int
+
+   /**
+    * Eth contains a field to represent the smallest units of ETH
+    */
+   export type STX = big.Int
+   //#endregion currencies.go
+ 
+
 }

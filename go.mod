@@ -14,7 +14,9 @@ require (
 	github.com/ethereum-optimism/go-optimistic-ethereum-utils v0.1.0
 	github.com/ethereum/go-ethereum v1.10.4
 	github.com/fatih/color v1.12.0
+	github.com/fjl/gencodec v0.0.0-20191126094850-e283372f291f // indirect
 	github.com/fxamacker/cbor/v2 v2.3.0
+	github.com/garslo/gogen v0.0.0-20170307003452-d6ebae628c7c // indirect
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-contrib/expvar v0.0.0-20181230111036-f23b556cc79f
 	github.com/gin-contrib/size v0.0.0-20190528085907-355431950c57
@@ -51,6 +53,7 @@ require (
 	github.com/scylladb/go-reflectx v1.0.1
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/smartcontractkit/gencodec v0.0.0-20181025021405-42dc7da8c287 // indirect
 	github.com/smartcontractkit/libocr v0.0.0-20210803133922-ddddd3dce7e5
 	github.com/smartcontractkit/wsrpc v0.3.0
 	github.com/spf13/viper v1.8.1

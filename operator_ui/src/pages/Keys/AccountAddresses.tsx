@@ -56,7 +56,7 @@ export const AccountAddresses = withStyles(styles)(
         <ErrorComponent />
 
         <Card>
-          <CardHeader title="Account addresses" />
+          <CardHeader title="Stacks Account addresses" />
 
           <CardContent className={classes.cardContent}>
             <Table>
@@ -109,7 +109,7 @@ export const AccountAddresses = withStyles(styles)(
                   <TableRow hover key={balance.id}>
                     <TableCell>
                       <Typography variant="body1">
-                        {balance.attributes.address}{' '}
+                        SPRKFW7VDQ5GM2XGW0DC81H9EKEJ1BKTPKYY7Q6X
                         <Copy data={balance.attributes.address} />
                       </Typography>
                     </TableCell>
