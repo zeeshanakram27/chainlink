@@ -22,11 +22,7 @@ declare module 'core/store/presenters' {
    * Stacks-AccountBalance Stacks & STX-LINK balances
    */
    export interface StacksAccountBalance {
-    stx: string
-    balance: Pointer<assets.STX>
-    stx_linkBalance: Pointer<assets.STX_Link>
-    createdAt: string
-    isFunding: boolean
+    balance: Pointer<assets.Stx>
   }
 
   /**

@@ -18,6 +18,8 @@
     "node": "^12.0.0"
   },
   "scripts": {
+    "start": "./chainlink local node --password password.txt --api apicredentials.txt",
+    "build": "go build -gcflags='all=-N -l' -o chainlink ./core/",
     "lint": "eslint --ext js,jsx,ts,tsx .",
     "lint:evm": "eslint --ext js,jsx,ts,tsx contracts/ evm-test-helpers/",
     "prettier:check": "yarn prettier '**/*' --check --ignore-unknown",

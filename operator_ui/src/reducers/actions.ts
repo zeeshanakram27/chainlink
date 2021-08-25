@@ -140,11 +140,14 @@ export enum ResourceActionType {
   RECEIVE_UPDATE_ERROR = 'RECEIVE_UPDATE_ERROR',
   RECEIVE_UPDATE_SUCCESS = 'RECEIVE_UPDATE_SUCCESS',
   RESPONSE_ACCOUNT_BALANCE = 'RESPONSE_ACCOUNT_BALANCE',
+  RESPONSE_STACKS_ACCOUNT_BALANCE = 'RESPONSE_STACKS_ACCOUNT_BALANCE',
   REQUEST_ACCOUNT_BALANCE = 'REQUEST_ACCOUNT_BALANCE',
+  REQUEST_STACKS_ACCOUNT_BALANCE = 'REQUEST_STACKS_ACCOUNT_BALANCE',
   REQUEST_CREATE = 'REQUEST_CREATE',
   REQUEST_DELETE = 'REQUEST_DELETE',
   REQUEST_UPDATE = 'REQUEST_UPDATE',
   UPSERT_ACCOUNT_BALANCE = 'UPSERT_ACCOUNT_BALANCE',
+  UPSERT_STACKS_ACCOUNT_BALANCE = 'UPSERT_STACKS_ACCOUNT_BALANCE',
   UPSERT_BRIDGES = 'UPSERT_BRIDGES',
   UPSERT_BRIDGE = 'UPSERT_BRIDGE',
   UPSERT_CONFIGURATION = 'UPSERT_CONFIGURATION',
@@ -227,12 +230,22 @@ export interface ReceiveUpdateErrorAction
  * REQUEST_ACCOUNT_BALANCE
  */
 
-export interface RequestAccountBalanceAction
-  extends Action<ResourceActionType.REQUEST_ACCOUNT_BALANCE> {}
+ export interface RequestAccountBalanceAction
+ extends Action<ResourceActionType.REQUEST_ACCOUNT_BALANCE> {}
+
+ export interface RequestStacksAccountBalanceAction
+ extends Action<ResourceActionType.REQUEST_STACKS_ACCOUNT_BALANCE> {}
 
 /**
  * UPSERT_ACCOUNT_BALANCE
  */
+
+ export interface UpsertStacksAccountBalanceAction
+ extends Action<ResourceActionType.UPSERT_STACKS_ACCOUNT_BALANCE> {
+  data: {
+    stx: any
+  }
+}
 
 export interface UpsertAccountBalanceAction
   extends Action<ResourceActionType.UPSERT_ACCOUNT_BALANCE> {
@@ -247,6 +260,9 @@ export interface UpsertAccountBalanceAction
 
 export interface ResponseAccountBalanceAction
   extends Action<ResourceActionType.RESPONSE_ACCOUNT_BALANCE> {}
+
+ export interface ResponseStacksAccountBalanceAction
+ extends Action<ResourceActionType.RESPONSE_STACKS_ACCOUNT_BALANCE> {}
 
 /**
  * UPSERT_BRIDGES
@@ -401,8 +417,11 @@ export type Actions =
   | ReceiveUpdateSuccessAction
   | ReceiveUpdateErrorAction
   | RequestAccountBalanceAction
+  | RequestStacksAccountBalanceAction
   | UpsertAccountBalanceAction
+  | UpsertStacksAccountBalanceAction
   | ResponseAccountBalanceAction
+  | ResponseStacksAccountBalanceAction
   | UpsertBridgesAction
   | UpsertBridgeAction
   | UpsertConfigurationAction

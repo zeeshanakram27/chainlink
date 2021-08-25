@@ -28,6 +28,19 @@ export function getOptions(
   return CUDOptionFactory(method, raw)
 }
 
+
+export function getCrossOriginOptions(
+  method: Method,
+  raw?: boolean,
+): (val?: any) => FetchOptions {
+  if (method === Method.GET) {
+    return () => ({
+      method: 'GET',
+    })
+  }
+
+  return CUDOptionFactory(method, raw)
+}
 /**
  * Create, Update, Delete option factory
  * @param method The http method to create the option object for

@@ -86,6 +86,7 @@ export class Api {
     return <Params, T, NamedPathParams extends object = object>(
       url: string,
       raw?: boolean,
+      crossOrigin?: boolean,
     ): Method<Params, T, NamedPathParams> => {
       const toPath = pathToRegexp.compile<NamedPathParams>(url)
 
@@ -99,8 +100,12 @@ export class Api {
           path,
           query,
         )
+        var options = http.getOptions(method, raw)
+        if (crossOrigin) {
+          options = http.getCrossOriginOptions(method, raw)
+        }
 
-        const options = http.getOptions(method, raw)
+        // const options = http.getOptions(method, raw)
 
         const fetch = fetchWithTimeout(u.toString(), options(params))
 

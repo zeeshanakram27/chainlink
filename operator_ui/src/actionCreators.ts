@@ -335,6 +335,7 @@ function request<
       return requestData(...args)
         .then((json) => {
           const data = normalizeData(json)
+          console.log("normalizedData: ", data)
           dispatch({ type: successType, data })
         })
         .catch(handleError(dispatch))
@@ -376,7 +377,7 @@ function requestDelete(
 export const fetchAccountBalance = requestFetch(
   'ACCOUNT_BALANCE',
   api.v2.user.balances.getAccountBalances,
-  (json) =>
+  (json) => 
     normalize<{
       accountBalances: presenters.AccountBalance[]
     }>(json),
@@ -386,13 +387,19 @@ export const fetchStacksAccountBalance = requestFetch(
   'STACKS_ACCOUNT_BALANCE',
   api.v2.user.stacksBalances.getAccountBalances,
   (json) =>
-    normalize<{
-      stacksAccountBalances: presenters.StacksAccountBalance[]
-    }>(json),
+  normalize(json),
+    // normalize<{
+    //   stacksAccountBalances: presenters.StacksAccountBalance
+    // }>(json),
 )
 
 export type NormalizedAccountBalance = GetNormalizedData<
   typeof fetchAccountBalance
+>
+
+
+export type NormalizedStacksAccountBalance = GetNormalizedData<
+  typeof fetchStacksAccountBalance
 >
 
 export const fetchConfiguration = requestFetch(

@@ -19,16 +19,7 @@ export class Balances {
   public async getAccountBalances(): Promise<
     jsonapi.ApiResponse<presenters.AccountBalance[]>
   > {
-    // const response = await fetch(
-    //   'https://stacks-node-api.mainnet.stacks.co/extended/v1/address/SP4VX529NN4XTFCR7WJ2VXB4GNGR2R7KHSN29RSK/balances',
-    //   {
-    //     method: 'GET',
-    //   },
-    // )
-    // console.log(response.json())
-    console.log('here it is')
-    const p = this.accountBalances()
-    console.log('here goes p ', p)
+    console.log("eth: ", this.accountBalances())
     return this.accountBalances()
   }
 

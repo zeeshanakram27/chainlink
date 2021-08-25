@@ -1,0 +1,5 @@
+There is difference between JobsController and JobsSpecsController
+
+A core job needs to implement BasicAdapter interface
+
+spawner.go/ JobSpawner is used inside jc.Create()

@@ -6,5 +6,5 @@ export class User {
   constructor(private api: Api) {}
 
   public balances = new Balances(this.api)
-  public stacksBalances = new StacksBalances()
+  public stacksBalances = new StacksBalances(this.api)
 }
