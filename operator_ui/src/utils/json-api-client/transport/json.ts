@@ -100,7 +100,7 @@ export class Api {
           path,
           query,
         )
-        var options = http.getOptions(method, raw)
+        let options = http.getOptions(method, raw)
         if (crossOrigin) {
           options = http.getCrossOriginOptions(method, raw)
         }

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import Grid from '@material-ui/core/Grid'
 import Typography from '@material-ui/core/Typography'
@@ -14,10 +14,10 @@ import {
   fetchRecentJobRuns,
   fetchRecentlyCreatedJobs,
   fetchAccountBalance,
-  fetchStacksAccountBalance,
+  // fetchStacksAccountBalance,
 } from 'actionCreators'
 import accountBalanceSelector from 'selectors/accountBalance'
-import stacksAccountBalanceSelector from 'selectors/stacksAccountBalance'
+// import stacksAccountBalanceSelector from 'selectors/stacksAccountBalance'
 import dashboardJobRunsCountSelector from 'selectors/dashboardJobRunsCount'
 import recentJobRunsSelector from 'selectors/recentJobRuns'
 import recentlyCreatedJobsSelector from 'selectors/recentlyCreatedJobs'
@@ -43,8 +43,11 @@ export const Index = ({
   classes,
 }: Props) => {
   const dispatch = useDispatch()
+  // let stxbalance = '1'
+  // const [stxbalance] = useState("");
+  const [stacksBalance, setStacksBalance] = useState('')
   const accountBalance = useSelector(accountBalanceSelector)
-  const stacksAccountBalance = useSelector(stacksAccountBalanceSelector)
+  // const stacksAccountBalance = useSelector(stacksAccountBalanceSelector)
   const jobRunsCount = useSelector(dashboardJobRunsCountSelector)
   const recentJobRuns = useSelector(recentJobRunsSelector)
   const recentlyCreatedJobs = useSelector(recentlyCreatedJobsSelector)
@@ -58,7 +61,19 @@ export const Index = ({
   }, [dispatch])
 
   useEffect(() => {
-    dispatch(fetchStacksAccountBalance())
+    fetch(
+      'https://stacks-node-api.mainnet.stacks.co/extended/v1/address/SP4VX529NN4XTFCR7WJ2VXB4GNGR2R7KHSN29RSK/balances',
+      {
+        method: 'GET',
+      },
+    )
+      .then((response) => response.json())
+      .then((response) => {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        setStacksBalance(response.stx.balance)
+        console.log('Here goes resp', response)
+        console.log('Here goes resp1', response.stx.balance)
+      })
   }, [dispatch])
 
   useEffect(() => {
@@ -116,7 +131,7 @@ export const Index = ({
             <Grid item xs={12}>
               <TokenBalanceCard
                 title="Stacks Balance"
-                value={stacksAccountBalance?.balance}
+                value={String(stacksBalance)}
               />
             </Grid>
             <Grid item xs={12}>

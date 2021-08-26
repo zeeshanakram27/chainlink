@@ -39,6 +39,7 @@ const valAndTooltip = ({ value, error }: OwnProps) => {
 interface OwnProps {
   title: string
   value?: string
+  stxvalue?: number
   error?: string
 }
 
