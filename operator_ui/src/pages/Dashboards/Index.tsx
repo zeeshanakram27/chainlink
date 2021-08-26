@@ -69,9 +69,8 @@ export const Index = ({
     )
       .then((response) => response.json())
       .then((response) => {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        setStacksBalance(response.stx.balance)
-        console.log('Here goes resp', response)
+        setStacksBalance(String(response.stx.balance))
+        console.log('Here goes resp', typeof response.stx.balance)
         console.log('Here goes resp1', response.stx.balance)
       })
   }, [dispatch])
@@ -131,7 +130,7 @@ export const Index = ({
             <Grid item xs={12}>
               <TokenBalanceCard
                 title="Stacks Balance"
-                value={String(stacksBalance)}
+                stxValue={stacksBalance}
               />
             </Grid>
             <Grid item xs={12}>

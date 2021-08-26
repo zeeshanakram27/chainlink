@@ -27,7 +27,9 @@ const valAndTooltip = ({ value, error }: OwnProps) => {
     val = '...'
     tooltip = 'Loading...'
   } else {
+    console.log('value before formatting', value)
     const balance = formatBalance(value)
+    console.log('value after formatting', value)
     val = balance.formatted
     tooltip = balance.unformatted.toString()
   }
@@ -39,13 +41,14 @@ const valAndTooltip = ({ value, error }: OwnProps) => {
 interface OwnProps {
   title: string
   value?: string
-  stxvalue?: number
+  stxValue?: string
   error?: string
 }
 
 const TokenBalance: FC<OwnProps> = (props) => {
   const { val, tooltip } = valAndTooltip(props)
-
+  console.log(`this is val ${val} & tooltip ${tooltip}`)
+  const { stxValue } = props
   return (
     <PaddedCard>
       <Typography variant="h5" color="secondary">
@@ -53,7 +56,7 @@ const TokenBalance: FC<OwnProps> = (props) => {
       </Typography>
       <Typography variant="body1" color="textSecondary">
         <Tooltip title={tooltip}>
-          <span>{val}</span>
+          <span>{stxValue ? stxValue : val}</span>
         </Tooltip>
       </Typography>
     </PaddedCard>
