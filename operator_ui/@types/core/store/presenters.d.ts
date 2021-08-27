@@ -18,6 +18,14 @@ declare module 'core/store/presenters' {
     isFunding: boolean
   }
 
+  export interface StacksAccountBalance {
+    address: string
+    stxBalance: Pointer<assets.Stx>
+    stxLinkBalance: Pointer<assets.StxLink>
+    createdAt: string
+    isFunding: boolean
+  }
+
   /**
    * ConfigPrinter are the non-secret values of the node configuration
    */

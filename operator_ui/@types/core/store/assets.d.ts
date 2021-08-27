@@ -11,4 +11,7 @@ declare module 'core/store/assets' {
    */
   export type Eth = big.Int
   //#endregion currencies.go
+
+  export type Stx = big.Int
+  export type StxLink = big.Int
 }

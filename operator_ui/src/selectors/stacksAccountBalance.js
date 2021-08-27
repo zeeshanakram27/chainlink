@@ -1,0 +1,8 @@
+import build from 'redux-object'
+
+export default (state) => {
+  const address = Object.keys(state.stacksAccountBalances)[0]
+  if (address) {
+    return build(state, 'stacksAccountBalances', address)
+  }
+}
