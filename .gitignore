@@ -35,7 +35,6 @@ tools/clroot/db.sqlite3-wal
 # codeship
 *.aes
 dockercfg
-env
 credentials.env
 gcr_creds.env
 
