@@ -58,7 +58,7 @@ func (skc *STXKeysController) Index(c *gin.Context) {
 }
 
 func (ekc *STXKeysController) setStxBalance(stacksAddr string, stacksNodeURL string) presenters.NewSTXKeyOption {
-	url := fmt.Sprintf("https://%s/extended/v1/address/%s/balances", stacksNodeURL, stacksAddr)
+	url := fmt.Sprintf("%s/extended/v1/address/%s/balances", stacksNodeURL, stacksAddr)
 	method := "GET"
 
 	return func(r *presenters.STXKeyResource) error {
