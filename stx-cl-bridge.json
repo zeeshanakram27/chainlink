@@ -1,0 +1,6 @@
+{
+  "name": "stx-cl-bridge",
+  "url": "http://localhost:3000",
+  "minimumContractPayment": "1",
+  "confirmations": 1
+}

@@ -28,7 +28,6 @@ tools/clroot/db.sqlite3-wal
 # misc
 .DS_Store
 .envrc
-.env*
 .direnv
 .idea 
 
