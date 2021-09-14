@@ -28,13 +28,13 @@ func (r STXKeyResource) GetName() string {
 	return "sTXKeys"
 }
 
-// NewETHKeyOption defines a functional option which allows customisation of the
-// EthKeyResource
+// NewSTXKeyOption defines a functional option which allows customisation of the
+// StxKeyResource
 type NewSTXKeyOption func(*STXKeyResource) error
 
-// NewETHKeyResource constructs a new ETHKeyResource from a Key.
+// NewSTXKeyResource constructs a new StxKeyResource from a Key.
 //
-// Use the functional options to inject the ETH and LINK balances
+// Use the functional options to inject the STX and STX-LINK balances
 func NewSTXKeyResource(k string, opts ...NewSTXKeyOption) (*STXKeyResource, error) {
 	r := &STXKeyResource{
 		JAID:           NewJAID(k),
@@ -54,17 +54,17 @@ func NewSTXKeyResource(k string, opts ...NewSTXKeyOption) (*STXKeyResource, erro
 	return r, nil
 }
 
-func SetSTXKeyStxBalance(ethBalance *assets.Eth) NewSTXKeyOption {
+func SetSTXKeyStxBalance(stxBalance *assets.Eth) NewSTXKeyOption {
 	return func(r *STXKeyResource) error {
-		r.StxBalance = ethBalance
+		r.StxBalance = stxBalance
 
 		return nil
 	}
 }
 
-func SetSTXKeyStxLinkBalance(linkBalance *assets.Link) NewSTXKeyOption {
+func SetSTXKeyStxLinkBalance(stxLinkBalance *assets.Link) NewSTXKeyOption {
 	return func(r *STXKeyResource) error {
-		r.StxLinkBalance = linkBalance
+		r.StxLinkBalance = stxLinkBalance
 
 		return nil
 	}

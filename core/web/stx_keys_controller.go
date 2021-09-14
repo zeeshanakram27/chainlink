@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/smartcontractkit/chainlink/core/assets"
 	"github.com/smartcontractkit/chainlink/core/services/chainlink"
@@ -15,6 +16,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 )
+
+const STX_LINK_IDENTIFIER = "::stxlink-token"
 
 type stxBalanceResponse struct {
 	Stx struct {
@@ -29,7 +32,10 @@ type stxBalanceResponse struct {
 		BurnchainLockHeight       int    `json:"burnchain_lock_height"`
 		BurnchainUnlockHeight     int    `json:"burnchain_unlock_height"`
 	} `json:"stx"`
-	FungibleTokens interface {
+	FungibleTokens map[string]struct {
+		Balance       string `json:"balance"`
+		TotalSent     string `json:"total_sent"`
+		TotalReceived string `json:"total_received"`
 	} `json:"fungible_tokens"`
 	NonFungibleTokens interface {
 	} `json:"non_fungible_tokens"`
@@ -47,7 +53,7 @@ func (skc *STXKeysController) Index(c *gin.Context) {
 	stacksAddr := os.Getenv("STACKS_ACCOUNT_ADDRESS")
 	stacksNodeURL := os.Getenv("STACKS_NODE_URL")
 	resource, err := presenters.NewSTXKeyResource(stacksAddr,
-		skc.setStxBalance(stacksAddr, stacksNodeURL),
+		skc.setBalances(stacksAddr, stacksNodeURL),
 	)
 	if err != nil {
 		jsonAPIError(c, http.StatusInternalServerError, err)
@@ -57,7 +63,7 @@ func (skc *STXKeysController) Index(c *gin.Context) {
 	jsonAPIResponse(c, resource, "keys")
 }
 
-func (ekc *STXKeysController) setStxBalance(stacksAddr string, stacksNodeURL string) presenters.NewSTXKeyOption {
+func (ekc *STXKeysController) setBalances(stacksAddr string, stacksNodeURL string) presenters.NewSTXKeyOption {
 	url := fmt.Sprintf("%s/extended/v1/address/%s/balances", stacksNodeURL, stacksAddr)
 	method := "GET"
 
@@ -84,13 +90,32 @@ func (ekc *STXKeysController) setStxBalance(stacksAddr string, stacksNodeURL str
 		if err != nil {
 			return errors.Errorf("error getting stacks balance from Stacks node: %v", err)
 		}
-		bal := new(big.Int)
-		bal, ok := bal.SetString(sbr.Stx.Balance, 10)
+		stxBal := new(big.Int)
+		stxBal, ok := stxBal.SetString(sbr.Stx.Balance, 10)
 		if !ok {
-			return errors.Errorf("error parsing stacks balance to big.Int: %v", err)
+			return errors.Errorf("error parsing stx balance to big.Int: %v", err)
 
 		}
-		r.StxBalance = (*assets.Eth)(bal)
+		r.StxBalance = (*assets.Eth)(stxBal)
+		fmt.Println("stxBal: ", stxBal, r.StxBalance)
+		stxLinkBal := new(big.Int)
+		stxLinkBal, ok = stxLinkBal.SetString(sbr.getFungibleTokenBalance(STX_LINK_IDENTIFIER), 10)
+		if !ok {
+			return errors.Errorf("error parsing stxLink balance to big.Int: %v", err)
+
+		}
+		r.StxLinkBalance = (*assets.Link)(stxLinkBal)
+		fmt.Println("stxLinkBal: ", stxLinkBal, r.StxLinkBalance)
 		return nil
 	}
+}
+
+func (sbr stxBalanceResponse) getFungibleTokenBalance(name string) string {
+	for identifier, info := range sbr.FungibleTokens {
+		if strings.HasSuffix(identifier, name) {
+			return info.Balance
+		}
+
+	}
+	return "0"
 }

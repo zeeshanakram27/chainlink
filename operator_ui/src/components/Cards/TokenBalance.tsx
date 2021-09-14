@@ -17,11 +17,12 @@ const formatBalance = (val: string) => {
 }
 
 const formatStacksBalance = (val: string) => {
-  const b = new BigNumber(val)
-  const tokenBalance = b.dividedBy(1000000).toNumber()
+  // const b = new BigNumber(val)
+  // const tokenBalance = b.dividedBy(1000000).toNumber()
+  //  const tokenBalance = b.toNumber()
   return {
-    formatted: numeral(tokenBalance).format('0.200000a'),
-    unformatted: tokenBalance,
+    formatted: val,
+    unformatted: val,
   }
 }
 
