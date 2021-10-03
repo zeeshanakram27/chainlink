@@ -19,6 +19,11 @@ import (
 
 const STX_LINK_IDENTIFIER = "::stxlink-token"
 
+var (
+	STACKS_ACCOUNT_ADDRESS = os.Getenv("STACKS_ACCOUNT_ADDRESS")
+	STACKS_NODE_URL        = os.Getenv("STACKS_NODE_URL")
+)
+
 type stxBalanceResponse struct {
 	Stx struct {
 		Balance                   string `json:"balance"`
@@ -41,19 +46,18 @@ type stxBalanceResponse struct {
 	} `json:"non_fungible_tokens"`
 }
 
-// ETHKeysController manages account keys
+// STXKeysController manages account keys
 type STXKeysController struct {
 	App chainlink.Application
 }
 
-// Index returns the node's Ethereum keys and the account balances of ETH & LINK.
+// Index returns the node's Stacks keys and the account balances of STX & STX-LINK.
 // Example:
 //  "<application>/keys/stx"
 func (skc *STXKeysController) Index(c *gin.Context) {
-	stacksAddr := os.Getenv("STACKS_ACCOUNT_ADDRESS")
-	stacksNodeURL := os.Getenv("STACKS_NODE_URL")
-	resource, err := presenters.NewSTXKeyResource(stacksAddr,
-		skc.setBalances(stacksAddr, stacksNodeURL),
+
+	resource, err := presenters.NewSTXKeyResource(STACKS_ACCOUNT_ADDRESS,
+		skc.setBalances(STACKS_ACCOUNT_ADDRESS, STACKS_NODE_URL),
 	)
 	if err != nil {
 		jsonAPIError(c, http.StatusInternalServerError, err)

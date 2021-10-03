@@ -17,9 +17,6 @@ const formatBalance = (val: string) => {
 }
 
 const formatStacksBalance = (val: string) => {
-  // const b = new BigNumber(val)
-  // const tokenBalance = b.dividedBy(1000000).toNumber()
-  //  const tokenBalance = b.toNumber()
   return {
     formatted: val,
     unformatted: val,
@@ -64,7 +61,7 @@ interface OwnProps {
 
 const TokenBalance: FC<OwnProps> = (props) => {
   const { val, stxVal, tooltip, stxTooltip } = valAndTooltip(props)
-  
+
   return (
     <PaddedCard>
       <Typography variant="h5" color="secondary">
